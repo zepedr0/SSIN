@@ -39,7 +39,7 @@ async function mainLoop() {
   const service_questions = [
     {
       type: "input",
-      name: "service",
+      name: "option",
       message:
         "Choose a service, Calculation of: \n 1) square root \n 2) cubic root \n 3) parameterized n root \n",
       validate: (value) => {
@@ -49,11 +49,12 @@ async function mainLoop() {
       },
     },
     {
-      type: "number",
-      name: "value12",
+      type: "input",
+      name: "value",
       message: "Enter the value: \n",
       validate: (value) => {
-        if (Number.isNaN(value)) return 'Invalid Input! Please enter a number!';
+        //if (Number.isNaN(value)) return 'Invalid Input! Please enter a number!';
+        return true;
       },
     },
   ];
@@ -77,21 +78,16 @@ async function mainLoop() {
         console.log(error);
       });
   });*/
-
   inquirer.prompt(service_questions).then((answers) => {
-    const { option, value } = answers;
-    axios
-      .get(`${api}services/${option}/${value}`)
+   axios
+      .get(`${api}services/${answers.option}/${answers.value}`)
       .then((answer) => {
-        inquirer.prompt().then((answers) => {
-          return 'cmon';
-        });
-        return answer.data;
+        console.log("Result: " + answer.data);
       })
       .catch((error) => {
         console.log("ERRORRRR");
         console.log(error);
-      });
+      }); 
   });
 }
 
