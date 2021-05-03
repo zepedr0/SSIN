@@ -4,40 +4,48 @@ const fs = require("fs");
 
 const api = "http://localhost:3000/api/";
 
-function paramRoot(value) {
+function paramRoot(value, token) {
   const root_question = [
     {
       type: "number",
       name: "root",
       message: "Enter the root:\n",
       validate: (value) => {
-        if (Number.isNaN(value)) return "Invalid Input! Please enter a number!";
-        else return true;
+        if (isNaN(value)) {
+          return "please enter a number";
+        }
+        return true;
       },
     },
   ];
   inquirer.prompt(root_question).then((answer) => {
     axios
-      .get(`${api}services/3/${value}/${answer.root}`)
+      .get(`${api}services/3/${value}/${answer.root}`, {
+        headers: {
+          token: `${token}`,
+        },
+      })
       .then((answer) => {
         console.log("Result: " + answer.data);
       })
       .catch((error) => {
-        console.log("ERRORRRR");
-        console.log(error);
+        console.log(error.response.data.error);
       });
   });
 }
 
-function squareCubicRoot(option, value) {
+function squareCubicRoot(option, value, token) {
   axios
-    .get(`${api}services/${option}/${value}`)
+    .get(`${api}services/${option}/${value}`, {
+      headers: {
+        token: `${token}`,
+      },
+    })
     .then((answer) => {
       console.log("Result: " + answer.data);
     })
     .catch((error) => {
-      console.log("ERRORRRR");
-      console.log(error);
+      console.log(error.response.data.error);
     });
 }
 
@@ -90,13 +98,15 @@ async function mainLoop() {
       name: "value",
       message: "Enter the value: \n",
       validate: (value) => {
-        //if (Number.isNaN(value)) return 'Invalid Input! Please enter a number!';
+        if (isNaN(value)) {
+          return "please enter a number";
+        }
         return true;
       },
     },
   ];
 
-  /*inquirer.prompt(register_questions).then((answers) => {
+  /*await inquirer.prompt(register_questions).then((answers) => {
     const { username, one_time_id } = answers;
 
     // Register
@@ -115,7 +125,7 @@ async function mainLoop() {
         console.log(error);
       });
   });*/
-  inquirer
+  await inquirer
     .prompt([
       {
         type: "input",
@@ -130,11 +140,15 @@ async function mainLoop() {
     ])
     .then((answer) => {
       if (answer.option == 1) {
+        let token;
+        fs.readFile("./data/Session", (err, data) => {
+          token = data;
+        });
         inquirer.prompt(service_questions).then((answers) => {
           if (answers.option != 3) {
-            squareCubicRoot(answers.option, answers.value);
+            squareCubicRoot(answers.option, answers.value, token);
           } else if (answers.option == 3) {
-            paramRoot(answers.value);
+            paramRoot(answers.value, token);
           }
         });
       } else process.exit();
