@@ -78,7 +78,7 @@ async function mainLoop() {
       type: "input",
       name: "option",
       message:
-        "Choose a service, Calculation of: \n 1) square root \n 2) cubic root \n 3) parameterized n root \n",
+        "Choose a service, Calculation of: \n 1) square root (clearance level 1) \n 2) cubic root (clearance level 2) \n 3) parameterized n root (clearance level 3) \n",
       validate: (value) => {
         let pass = value.match(/^[1-3]/);
         if (pass) return true;
@@ -115,13 +115,30 @@ async function mainLoop() {
         console.log(error);
       });
   });*/
-  inquirer.prompt(service_questions).then((answers) => {
-    if (answers.option != 3) {
-      squareCubicRoot(answers.option, answers.value);
-    } else {
-      paramRoot(answers.value);
-    }
-  });
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        name: "option",
+        message: "What do you want to do?\n 1) Calculate a root \n 2) Quit \n",
+        validate: (value) => {
+          let pass = value.match(/^[1-2]/);
+          if (pass) return true;
+          else return "Please enter a valid option!";
+        },
+      },
+    ])
+    .then((answer) => {
+      if (answer.option == 1) {
+        inquirer.prompt(service_questions).then((answers) => {
+          if (answers.option != 3) {
+            squareCubicRoot(answers.option, answers.value);
+          } else if (answers.option == 3) {
+            paramRoot(answers.value);
+          }
+        });
+      } else process.exit();
+    });
 }
 
 module.exports = mainLoop;
