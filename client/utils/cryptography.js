@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { promisify } = require('util');
+const { promisify } = require("util");
 
 // Encrypt message
 const encrypt = (publicKey, msg) => {
@@ -16,12 +16,13 @@ const encrypt = (publicKey, msg) => {
 };
 
 // Decrypt message
-const decrypt = (privateKey, msg) => {
+const decrypt = (privateKey, passphrase, msg) => {
   const decryptedData = crypto.privateDecrypt(
     {
       key: privateKey,
       padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
       oaepHash: "sha256",
+      passphrase,
     },
     Buffer.from(msg)
   );
@@ -48,17 +49,43 @@ const checkSign = (publicKey, msg, signature) => {
 };
 
 // Generate PBKDF key
-const generatePBKDF = async (password, salt, cost = 100000, digest = 'sha512') => {
+// const generatePBKDF = async (
+//   password,
+//   salt,
+//   cost = 100000,
+//   digest = "sha512"
+// ) => {
+//   const derivedKey = await promisify(crypto.pbkdf2)(
+//     password,
+//     salt,
+//     cost,
+//     32,
+//     digest
+//   );
 
-  const derivedKey = await promisify(crypto.pbkdf2)(password, salt, cost, 128, digest);
+//   return derivedKey;
+// };
 
-  return derivedKey;
-}
+const generatePubPrivKeys = () => {
+  return crypto.generateKeyPairSync("rsa", {
+    modulusLength: 4096,
+    publicKeyEncoding: {
+      type: "spki",
+      format: "pem",
+    },
+    privateKeyEncoding: {
+      type: "pkcs8",
+      format: "pem",
+      cipher: "aes-256-cbc",
+      passphrase: "password",
+    },
+  });
+};
 
 module.exports = {
   encrypt,
   decrypt,
   sign,
   checkSign,
-  generatePBKDF,
+  generatePubPrivKeys,
 };
