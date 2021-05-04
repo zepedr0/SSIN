@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const { promisify } = require('util');
 
 // Encrypt message
 const encrypt = (publicKey, msg) => {
@@ -46,9 +47,18 @@ const checkSign = (publicKey, msg, signature) => {
   return ver;
 };
 
+// Generate PBKDF key
+const generatePBKDF = async (password, salt, cost = 100000, digest = 'sha512') => {
+
+  const derivedKey = await promisify(crypto.pbkdf2)(password, salt, cost, 128, digest);
+
+  return derivedKey;
+}
+
 module.exports = {
   encrypt,
   decrypt,
   sign,
   checkSign,
+  generatePBKDF,
 };
