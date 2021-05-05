@@ -1,7 +1,6 @@
 const inquirer = require("inquirer");
 const axios = require("axios");
 const fs = require("fs");
-const path = require("path");
 const crypto = require("crypto");
 
 const cryptography = require("./utils/cryptography");
@@ -60,41 +59,44 @@ async function mainLoop() {
         inquirer
           .prompt(password_question)
           .then(async (answerPassword) => {
+            const text = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`;
+            //const text = "small text";
             const { password } = answerPassword;
 
-            const dir = path.join(__dirname, "data", one_time_id);
+            cryptography.generatePubPrivKeys(one_time_id);
 
-            // If user does not have a directory yet
-            if (!fs.existsSync(dir)) {
-              fs.mkdirSync(dir);
-            }
-
-            const {
-              publicKey,
-              privateKey,
-            } = cryptography.generatePubPrivKeys();
-
-            // console.log(publicKey);
-            // console.log(privateKey);
-            console.log(answer.data);
-
-            const encSessionToken = cryptography.encrypt(
-              publicKey,
-              answer.data.token
-            );
-            console.log("\n>>> Encrypted Token: \n\n" + encSessionToken);
+            const encSessionToken = cryptography.encrypt(text, one_time_id);
+            console.log("\n>>> Encrypted Token: \n\n" + encSessionToken + "\n");
 
             // Writes encrypted session token to a file
-            fs.writeFileSync("./data/Session", encSessionToken, (err) => {
-              // Error writing to file
-              if (err) return console.log(err);
-              console.log("Session data stored");
-            });
+            try {
+              fs.writeFileSync("./data/Session", encSessionToken);
+            } catch (err) {
+              console.log("Error writing Session file");
+              console.log(err);
+            }
+
+            console.log("Session Token Stored");
 
             // Reads encypted session token from file
-            const sessionFileData = fs.readFileSync("./data/Session", "hex");
+            let sessionFileData;
+            try {
+              sessionFileData = fs.readFileSync("./data/Session", {
+                encoding: "utf8",
+              });
+            } catch (err) {
+              console.log("Error reading Session file");
+              console.log(err);
+            }
 
-            const decToken = cryptography.decrypt(privateKey, password, sessionFileData);
+            console.log("Session info successfully read");
+
+            const decToken = cryptography.decrypt(
+              password,
+              sessionFileData,
+              one_time_id
+            );
+
             console.log(decToken);
 
             // // Store publicKey
