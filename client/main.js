@@ -50,9 +50,9 @@ const register = () => {
     },
   ];
 
-  inquirer.prompt(register_questions).then((answers) => {
+  inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
-    const registerResult = requestRegister(username, one_time_id);
+    const registerResult = await requestRegister(username, one_time_id);
 
     // If register was successful, registerResult has the Session token
     if (!registerResult) {
@@ -85,30 +85,54 @@ const register = () => {
 };
 
 const localLogin = () => {
-  
-}
+  const password_question = [
+    {
+      type: "password",
+      name: "password",
+      message: "Session found enter the password to login",
+      mask: "*",
+    },
+  ];
+
+  return inquirer
+    .prompt(password_question)
+    .then((answerPassword) => {
+      const { password } = answerPassword;
+
+      let nFailedLogins = 0;
+      let loginAnswer;
+      do {
+        // Retrieves session info from Session file
+        loginAnswer = session.login(password);
+        if (loginAnswer.success === false) {
+          if (loginAnswer.reason === "Wrong Password") {
+            nFailedLogins++;
+            continue;
+          }
+          // Any other error decrypting
+          return;
+        }
+      } while (!loginAnswer.success && nFailedLogins < 3);
+
+      if (nFailedLogins === 3) {
+        return;
+      }
+
+      console.log("Session Info:");
+      console.log(loginAnswer.sessionInfo);
+    })
+    .catch((error) => {
+      console.log("Failed to retrieve password for local login");
+      console.log(error);
+      return;
+    });
+};
 
 function mainLoop() {
-  register();
-
-  // let nFailedLogins = 0;
-  // let loginAnswer;
-  // do {
-  //   // Retrieves session info from Session file
-  //   loginAnswer = session.login(password, one_time_id);
-  //   if (loginAnswer.success === false) {
-  //     if (loginAnswer.reason === "Wrong Password") {
-  //       nFailedLogins++;
-  //       continue;
-  //     }
-  //     // Any other error decrypting
-  //     return;
-  //   }
-  // } while (!loginAnswer.success && nFailedLogins < 3);
-  // if (nFailedLogins === 3) {
-  //   return;
-  // }
-  // console.log(JSON.parse(loginAnswer.sessionInfo));
+  // register();
+  if (session.exists()) {
+    localLogin();
+  }
 }
 
 module.exports = mainLoop;
