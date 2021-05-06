@@ -1,12 +1,25 @@
 const inquirer = require("inquirer");
 const axios = require("axios");
 
-const cryptography = require("./utils/cryptography");
 const session = require("./utils/session");
 
 const api = "http://localhost:3000/api/";
 
-async function mainLoop() {
+const requestRegister = (username, one_time_id) => {
+  // Register
+  return axios
+    .post(`${api}users/register`, { username, one_time_id })
+    .then((answer) => {
+      return answer.data.token;
+    })
+    .catch((error) => {
+      console.log("Register Request Failed");
+      console.log(error);
+      return null;
+    });
+};
+
+const register = () => {
   console.log("[WIP] Register user");
 
   // User input for username and id to register
@@ -27,7 +40,6 @@ async function mainLoop() {
       type: "input",
       name: "one_time_id",
       message: "Enter your one-time id",
-      mask: "*",
       validate: (value) => {
         if (value.length === 12) {
           return true;
@@ -40,62 +52,63 @@ async function mainLoop() {
 
   inquirer.prompt(register_questions).then((answers) => {
     const { username, one_time_id } = answers;
+    const registerResult = requestRegister(username, one_time_id);
 
-    // Register
-    axios
-      .post(`${api}users/register`, { username, one_time_id })
-      .then((answer) => {
-        const password_question = [
-          {
-            type: "password",
-            name: "password",
-            message:
-              "Enter a password for you account. Please note that this is irreplaceable",
-            mask: "*",
-          },
-        ];
+    // If register was successful, registerResult has the Session token
+    if (!registerResult) {
+      return;
+    }
 
-        inquirer
-          .prompt(password_question)
-          .then((answerPassword) => {
-            const { password } = answerPassword;
+    const password_question = [
+      {
+        type: "password",
+        name: "password",
+        message:
+          "Enter a password for you account. Please note that this is irreplaceable",
+        mask: "*",
+      },
+    ];
 
-            // Starts Session
-            session.saveSession(username, one_time_id, answer.data.token);
+    inquirer
+      .prompt(password_question)
+      .then((answerPassword) => {
+        const { password } = answerPassword;
 
-            let nFailedLogins = 0;
-            let loginAnswer;
-            do {
-              // Retrieves session info from Session file
-              loginAnswer = session.login(password, one_time_id);
-
-              if (loginAnswer.success === false) {
-                if (loginAnswer.reason === "Wrong Password") {
-                  nFailedLogins++;
-                  continue;
-                }
-
-                // Any other error decrypting
-                return;
-              }
-            } while (!loginAnswer.success && nFailedLogins < 3);
-
-            if (nFailedLogins === 3) {
-              return;
-            }
-
-            console.log(JSON.parse(loginAnswer.sessionInfo));
-          })
-          .catch((error) => {
-            console.log("ERRORRRR 2");
-            console.log(error);
-          });
+        // Starts Session
+        session.saveSession(username, one_time_id, registerResult, password);
       })
       .catch((error) => {
-        console.log("ERRORRRR");
+        console.log("Register Failed");
         console.log(error);
       });
   });
+};
+
+const localLogin = () => {
+  
+}
+
+function mainLoop() {
+  register();
+
+  // let nFailedLogins = 0;
+  // let loginAnswer;
+  // do {
+  //   // Retrieves session info from Session file
+  //   loginAnswer = session.login(password, one_time_id);
+  //   if (loginAnswer.success === false) {
+  //     if (loginAnswer.reason === "Wrong Password") {
+  //       nFailedLogins++;
+  //       continue;
+  //     }
+  //     // Any other error decrypting
+  //     return;
+  //   }
+  // } while (!loginAnswer.success && nFailedLogins < 3);
+  // if (nFailedLogins === 3) {
+  //   return;
+  // }
+  // console.log(JSON.parse(loginAnswer.sessionInfo));
 }
 
 module.exports = mainLoop;

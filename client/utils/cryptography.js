@@ -62,7 +62,7 @@ const checkSign = (publicKey, msg, signature) => {
 //   return derivedKey;
 // };
 
-const generatePubPrivKeys = (one_time_id) => {
+const generatePubPrivKeys = (one_time_id, passphrase) => {
   const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 4096,
     publicKeyEncoding: {
@@ -73,7 +73,7 @@ const generatePubPrivKeys = (one_time_id) => {
       type: "pkcs8",
       format: "pem",
       cipher: "aes-256-cbc",
-      passphrase: "password",
+      passphrase,
     },
   });
 

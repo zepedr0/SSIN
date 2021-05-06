@@ -2,8 +2,8 @@ const fs = require("fs");
 const cryptography = require("./cryptography");
 
 // Store new session
-const saveSession = (username, one_time_id, decToken) => {
-  cryptography.generatePubPrivKeys(one_time_id);
+const saveSession = (username, one_time_id, decToken, password) => {
+  cryptography.generatePubPrivKeys(one_time_id, password);
   const sessionInfo = { username, one_time_id, sessionToken: decToken };
 
   const encSessionInfo = cryptography.encrypt(
