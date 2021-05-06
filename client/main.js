@@ -1,9 +1,8 @@
 const inquirer = require("inquirer");
 const axios = require("axios");
-const fs = require("fs");
-const crypto = require("crypto");
 
 const cryptography = require("./utils/cryptography");
+const session = require("./utils/session");
 
 const api = "http://localhost:3000/api/";
 
@@ -58,78 +57,34 @@ async function mainLoop() {
 
         inquirer
           .prompt(password_question)
-          .then(async (answerPassword) => {
-            const text = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`;
-            //const text = "small text";
+          .then((answerPassword) => {
             const { password } = answerPassword;
 
-            cryptography.generatePubPrivKeys(one_time_id);
+            // Starts Session
+            session.saveSession(username, one_time_id, answer.data.token);
 
-            const encSessionToken = cryptography.encrypt(text, one_time_id);
-            console.log("\n>>> Encrypted Token: \n\n" + encSessionToken + "\n");
+            let nFailedLogins = 0;
+            let loginAnswer;
+            do {
+              // Retrieves session info from Session file
+              loginAnswer = session.login(password, one_time_id);
 
-            // Writes encrypted session token to a file
-            try {
-              fs.writeFileSync("./data/Session", encSessionToken);
-            } catch (err) {
-              console.log("Error writing Session file");
-              console.log(err);
+              if (loginAnswer.success === false) {
+                if (loginAnswer.reason === "Wrong Password") {
+                  nFailedLogins++;
+                  continue;
+                }
+
+                // Any other error decrypting
+                return;
+              }
+            } while (!loginAnswer.success && nFailedLogins < 3);
+
+            if (nFailedLogins === 3) {
+              return;
             }
 
-            console.log("Session Token Stored");
-
-            // Reads encypted session token from file
-            let sessionFileData;
-            try {
-              sessionFileData = fs.readFileSync("./data/Session", {
-                encoding: "utf8",
-              });
-            } catch (err) {
-              console.log("Error reading Session file");
-              console.log(err);
-            }
-
-            console.log("Session info successfully read");
-
-            const decToken = cryptography.decrypt(
-              password,
-              sessionFileData,
-              one_time_id
-            );
-
-            console.log(decToken);
-
-            // // Store publicKey
-            // fs.writeFileSync(path + "publicKey.pem", keys.publicKey, (err) => {
-            //   // Error writing to file
-            //   if (err) return console.log(err);
-            //   console.log("publicKey data stored");
-            // });
-
-            // // Salt
-            // const salt = crypto.randomBytes(32);
-            // fs.writeFileSync(path + "salt", salt, (err) => {
-            //   // Error writing to file
-            //   if (err) return console.log(err);
-            //   console.log("Salt data stored");
-            // });
-
-            // const encKey = await cryptography.generatePBKDF(password, salt);
-
-            // // IV
-            // const iv = crypto.randomBytes(16);
-            // const cipher = crypto.createCipheriv("aes-256", encKey, iv);
-
-            // let ciphered = cipher.update(keys.privateKey, "utf8", "hex");
-            // ciphered += cipher.final("hex");
-            // const ciphertext = iv.toString("hex") + ":" + ciphered;
-
-            // // Store privateKey
-            // fs.writeFileSync(path + "privateKey", ciphertext, (err) => {
-            //   // Error writing to file
-            //   if (err) return console.log(err);
-            //   console.log("privateKey data stored");
-            // });
+            console.log(JSON.parse(loginAnswer.sessionInfo));
           })
           .catch((error) => {
             console.log("ERRORRRR 2");
