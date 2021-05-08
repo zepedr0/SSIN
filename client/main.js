@@ -5,6 +5,35 @@ const session = require("./utils/session");
 
 const api = "http://localhost:3000/api/";
 
+const askUserPassword = async (message) => {
+  const password_question = [
+    {
+      type: "password",
+      name: "password",
+      message,
+      mask: "*",
+      validate: (value) => {
+        if (value.length > 2) {
+          return true;
+        }
+
+        return "Invalid password. It must have 3 or more characters";
+      },
+    },
+  ];
+
+  return await inquirer
+    .prompt(password_question)
+    .then((answerPassword) => {
+      return answerPassword.password;
+    })
+    .catch((error) => {
+      console.log("Failed to retrieve password from user");
+      console.log(error);
+      return;
+    });
+};
+
 const requestRegister = (username, one_time_id) => {
   // Register
   return axios
@@ -19,8 +48,8 @@ const requestRegister = (username, one_time_id) => {
     });
 };
 
-const register = () => {
-  console.log("[WIP] Register user");
+const register = async () => {
+  console.log("Register user");
 
   // User input for username and id to register
   const register_questions = [
@@ -50,7 +79,7 @@ const register = () => {
     },
   ];
 
-  inquirer.prompt(register_questions).then(async (answers) => {
+  await inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
     const registerResult = await requestRegister(username, one_time_id);
 
@@ -59,80 +88,52 @@ const register = () => {
       return;
     }
 
-    const password_question = [
-      {
-        type: "password",
-        name: "password",
-        message:
-          "Enter a password for you account. Please note that this is irreplaceable",
-        mask: "*",
-      },
-    ];
+    const password = await askUserPassword(
+      "Enter a password for you account. Please note that this is irreplaceable"
+    );
 
-    inquirer
-      .prompt(password_question)
-      .then((answerPassword) => {
-        const { password } = answerPassword;
-
-        // Starts Session
-        session.saveSession(username, one_time_id, registerResult, password);
-      })
-      .catch((error) => {
-        console.log("Register Failed");
-        console.log(error);
-      });
+    // Starts Session
+    session.saveSession(username, one_time_id, registerResult, password);
   });
 };
 
-const localLogin = () => {
-  const password_question = [
-    {
-      type: "password",
-      name: "password",
-      message: "Session found enter the password to login",
-      mask: "*",
-    },
-  ];
+const localLogin = async () => {
+  console.log("Local login");
 
-  return inquirer
-    .prompt(password_question)
-    .then((answerPassword) => {
-      const { password } = answerPassword;
-
-      let nFailedLogins = 0;
-      let loginAnswer;
-      do {
-        // Retrieves session info from Session file
-        loginAnswer = session.login(password);
-        if (loginAnswer.success === false) {
-          if (loginAnswer.reason === "Wrong Password") {
-            nFailedLogins++;
-            continue;
-          }
-          // Any other error decrypting
-          return;
-        }
-      } while (!loginAnswer.success && nFailedLogins < 3);
-
-      if (nFailedLogins === 3) {
-        return;
-      }
-
-      console.log("Session Info:");
-      console.log(loginAnswer.sessionInfo);
-    })
-    .catch((error) => {
-      console.log("Failed to retrieve password for local login");
-      console.log(error);
+  let nFailedLogins = 0;
+  let loginAnswer;
+  do {
+    const password = await askUserPassword(
+      "Session found enter the password to login"
+    );
+    if (!password) {
       return;
-    });
+    }
+
+    // Retrieves session info from Session file
+    loginAnswer = session.login(password);
+    if (loginAnswer.success === false) {
+      if (loginAnswer.reason === "Wrong Password") {
+        nFailedLogins++;
+        continue;
+      }
+      // Any other error decrypting
+      return;
+    }
+  } while (!loginAnswer.success && nFailedLogins < 3);
+
+  if (nFailedLogins === 3) {
+    console.log("Password wrong 3 times. Client closing");
+    return;
+  }
+
+  console.log("Session Info:");
+  console.log(loginAnswer.sessionInfo);
 };
 
-function mainLoop() {
-  // register();
-  if (session.exists()) {
-    localLogin();
-  }
+async function mainLoop() {
+  await register();
+  await localLogin();
 }
 
 module.exports = mainLoop;
