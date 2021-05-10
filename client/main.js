@@ -106,7 +106,7 @@ async function mainLoop() {
     },
   ];
 
-  /*await inquirer.prompt(register_questions).then((answers) => {
+  await inquirer.prompt(register_questions).then((answers) => {
     const { username, one_time_id } = answers;
 
     // Register
@@ -124,7 +124,7 @@ async function mainLoop() {
         console.log("ERRORRRR");
         console.log(error);
       });
-  });*/
+  });
   await inquirer
     .prompt([
       {
