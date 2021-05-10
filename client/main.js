@@ -1,6 +1,7 @@
 const inquirer = require("inquirer");
 const axios = require("axios");
-const fs = require("fs");
+
+const session = require("./utils/session");
 
 const api = "http://localhost:3000/api/";
 
@@ -49,8 +50,51 @@ function squareCubicRoot(option, value, token) {
     });
 }
 
-async function mainLoop() {
-  console.log("[WIP] Register user");
+const askUserPassword = async (message) => {
+  const password_question = [
+    {
+      type: "password",
+      name: "password",
+      message,
+      mask: "*",
+      validate: (value) => {
+        if (value.length > 2) {
+          return true;
+        }
+
+        return "Invalid password. It must have 3 or more characters";
+      },
+    },
+  ];
+
+  return await inquirer
+    .prompt(password_question)
+    .then((answerPassword) => {
+      return answerPassword.password;
+    })
+    .catch((error) => {
+      console.log("Failed to retrieve password from user");
+      console.log(error);
+      return;
+    });
+};
+
+const requestRegister = (username, one_time_id) => {
+  // Register
+  return axios
+    .post(`${api}users/register`, { username, one_time_id })
+    .then((answer) => {
+      return answer.data.token;
+    })
+    .catch((error) => {
+      console.log("Register Request Failed");
+      console.log(error);
+      return null;
+    });
+};
+
+const register = async () => {
+  console.log("Register user");
 
   // User input for username and id to register
   const register_questions = [
@@ -67,10 +111,9 @@ async function mainLoop() {
       },
     },
     {
-      type: "password",
+      type: "input",
       name: "one_time_id",
       message: "Enter your one-time id",
-      mask: "*",
       validate: (value) => {
         if (value.length === 12) {
           return true;
@@ -81,6 +124,60 @@ async function mainLoop() {
     },
   ];
 
+  await inquirer.prompt(register_questions).then(async (answers) => {
+    const { username, one_time_id } = answers;
+    const registerResult = await requestRegister(username, one_time_id);
+
+    // If register was successful, registerResult has the Session token
+    if (!registerResult) {
+      return;
+    }
+
+    const password = await askUserPassword(
+      "Enter a password for you account. Please note that this is irreplaceable"
+    );
+
+    // Starts Session
+    session.saveSession(username, one_time_id, registerResult, password);
+  });
+};
+
+const localLogin = async () => {
+  console.log("Local login");
+
+  let nFailedLogins = 0;
+  let loginAnswer;
+  do {
+    const password = await askUserPassword(
+      "Session found enter the password to login"
+    );
+    if (!password) {
+      return;
+    }
+
+    // Retrieves session info from Session file
+    loginAnswer = session.login(password);
+    if (loginAnswer.success === false) {
+      if (loginAnswer.reason === "Wrong Password") {
+        nFailedLogins++;
+        continue;
+      }
+      // Any other error decrypting
+      return;
+    }
+  } while (!loginAnswer.success && nFailedLogins < 3);
+
+  if (nFailedLogins === 3) {
+    console.log("Password wrong 3 times. Client closing");
+    return;
+  }
+
+  console.log("Session Info:");
+  console.log(loginAnswer.sessionInfo);
+  return loginAnswer.sessionInfo;
+};
+
+const rootCalc = async (token) => {
   const service_questions = [
     {
       type: "input",
@@ -106,25 +203,16 @@ async function mainLoop() {
     },
   ];
 
-  await inquirer.prompt(register_questions).then((answers) => {
-    const { username, one_time_id } = answers;
-
-    // Register
-    axios
-      .post(`${api}users/register`, { username, one_time_id })
-      .then((answer) => {
-        // Writes session token to a file
-        fs.writeFile("./data/Session", answer.data.token, (err) => {
-          // Error writing to file
-          if (err) return console.log(err);
-          console.log("Session data stored");
-        });
-      })
-      .catch((error) => {
-        console.log("ERRORRRR");
-        console.log(error);
-      });
+  inquirer.prompt(service_questions).then( (answers) => {
+    if (answers.option != 3) {
+      squareCubicRoot(answers.option, answers.value, token);
+    } else if (answers.option == 3) {
+      paramRoot(answers.value, token);
+    }
   });
+
+}
+const consoleMenu = async (sessionInfo) => {
   await inquirer
     .prompt([
       {
@@ -138,21 +226,44 @@ async function mainLoop() {
         },
       },
     ])
-    .then((answer) => {
+    .then(async(answer) => {
       if (answer.option == 1) {
-        let token;
-        fs.readFile("./data/Session", (err, data) => {
-          token = data;
-        });
-        inquirer.prompt(service_questions).then((answers) => {
-          if (answers.option != 3) {
-            squareCubicRoot(answers.option, answers.value, token);
-          } else if (answers.option == 3) {
-            paramRoot(answers.value, token);
-          }
-        });
+        let token = sessionInfo.user_private_info.sessionToken;
+        await rootCalc(token);
       } else process.exit();
     });
+};
+
+const registerLogin = async () => {
+  await inquirer
+  .prompt([
+    {
+      type: "input",
+      name: "option",
+      message: "What do you want to do?\n 1) Register \n 2) Login \n 3) Quit \n",
+      validate: (value) => {
+        let pass = value.match(/^[1-3]/);
+        if (pass) return true;
+        else return "Please enter a valid option!";
+      },
+    },
+  ])
+  .then(async (answer) => {
+    if (answer.option == 1) {
+      await register();
+      const sessionInfo = await localLogin();
+      await consoleMenu(sessionInfo);
+    }
+    else if ( answer.option == 2){
+      const sessionInfo = await localLogin();
+      await consoleMenu(sessionInfo);
+    }
+     else process.exit();
+  });
+};
+
+async function mainLoop() {
+  await registerLogin();
 }
 
 module.exports = mainLoop;
