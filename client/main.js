@@ -180,15 +180,11 @@ const localLogin = async () => {
 const rootCalc = async (token) => {
   const service_questions = [
     {
-      type: "input",
+      type: "list",
       name: "option",
       message:
-        "Choose a service, Calculation of: \n 1) square root (clearance level 1) \n 2) cubic root (clearance level 2) \n 3) parameterized n root (clearance level 3) \n",
-      validate: (value) => {
-        let pass = value.match(/^[1-3]/);
-        if (pass) return true;
-        else return "Please enter a valid option!";
-      },
+        "Choose a service, Calculation of: \n ",
+      choices: ['1) square root (clearance level 1)', '2) cubic root (clearance level 2)', '3) parameterized n root (clearance level 3)', '4) Quit'],
     },
     {
       type: "input",
@@ -204,11 +200,15 @@ const rootCalc = async (token) => {
   ];
 
   inquirer.prompt(service_questions).then( (answers) => {
-    if (answers.option != 3) {
-      squareCubicRoot(answers.option, answers.value, token);
-    } else if (answers.option == 3) {
+    if (answers.option == '1) square root (clearance level 1)') {
+      squareCubicRoot(1, answers.value, token);
+    } else if (answers.option == '2) cubic root (clearance level 2)') {
+      squareCubicRoot(2, answers.value, token);
+    }
+    else if (answers.option == '3) parameterized n root (clearance level 3)') {
       paramRoot(answers.value, token);
     }
+    else process.exit();
   });
 
 }
@@ -216,18 +216,14 @@ const consoleMenu = async (sessionInfo) => {
   await inquirer
     .prompt([
       {
-        type: "input",
+        type: "list",
         name: "option",
-        message: "What do you want to do?\n 1) Calculate a root \n 2) Quit \n",
-        validate: (value) => {
-          let pass = value.match(/^[1-2]/);
-          if (pass) return true;
-          else return "Please enter a valid option!";
-        },
+        message: "What do you want to do?\n",
+        choices: ['1) Calculate a root', '2) Quit'],
       },
     ])
     .then(async(answer) => {
-      if (answer.option == 1) {
+      if (answer.option == '1) Calculate a root') {
         let token = sessionInfo.user_private_info.sessionToken;
         await rootCalc(token);
       } else process.exit();
@@ -238,23 +234,19 @@ const registerLogin = async () => {
   await inquirer
   .prompt([
     {
-      type: "input",
+      type: "list",
       name: "option",
-      message: "What do you want to do?\n 1) Register \n 2) Login \n 3) Quit \n",
-      validate: (value) => {
-        let pass = value.match(/^[1-3]/);
-        if (pass) return true;
-        else return "Please enter a valid option!";
-      },
+      message: "What do you want to do?\n",
+      choices: ['1) Register', '2) Login', '3) Quit'],
     },
   ])
   .then(async (answer) => {
-    if (answer.option == 1) {
+    if (answer.option == '1) Register') {
       await register();
       const sessionInfo = await localLogin();
       await consoleMenu(sessionInfo);
     }
-    else if ( answer.option == 2){
+    else if ( answer.option == '2) Login'){
       const sessionInfo = await localLogin();
       await consoleMenu(sessionInfo);
     }
