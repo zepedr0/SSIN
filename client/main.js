@@ -5,6 +5,51 @@ const session = require("./utils/session");
 
 const api = "http://localhost:3000/api/";
 
+function paramRoot(value, token) {
+  const root_question = [
+    {
+      type: "number",
+      name: "root",
+      message: "Enter the root:\n",
+      validate: (value) => {
+        if (isNaN(value)) {
+          return "please enter a number";
+        }
+        return true;
+      },
+    },
+  ];
+  inquirer.prompt(root_question).then((answer) => {
+    axios
+      .get(`${api}services/3/${value}/${answer.root}`, {
+        headers: {
+          token: `${token}`,
+        },
+      })
+      .then((answer) => {
+        console.log("Result: " + answer.data);
+      })
+      .catch((error) => {
+        console.log(error.response.data.error);
+      });
+  });
+}
+
+function squareCubicRoot(option, value, token) {
+  axios
+    .get(`${api}services/${option}/${value}`, {
+      headers: {
+        token: `${token}`,
+      },
+    })
+    .then((answer) => {
+      console.log("Result: " + answer.data);
+    })
+    .catch((error) => {
+      console.log(error.response.data.error);
+    });
+}
+
 const askUserPassword = async (message) => {
   const password_question = [
     {
@@ -129,11 +174,88 @@ const localLogin = async () => {
 
   console.log("Session Info:");
   console.log(loginAnswer.sessionInfo);
+  return loginAnswer.sessionInfo;
+};
+
+const rootCalc = async (token) => {
+  const service_questions = [
+    {
+      type: "list",
+      name: "option",
+      message:
+        "Choose a service, Calculation of: \n ",
+      choices: ['1) square root (clearance level 1)', '2) cubic root (clearance level 2)', '3) parameterized n root (clearance level 3)', '4) Quit'],
+    },
+    {
+      type: "input",
+      name: "value",
+      message: "Enter the value: \n",
+      validate: (value) => {
+        if (isNaN(value)) {
+          return "please enter a number";
+        }
+        return true;
+      },
+    },
+  ];
+
+  inquirer.prompt(service_questions).then( (answers) => {
+    if (answers.option == '1) square root (clearance level 1)') {
+      squareCubicRoot(1, answers.value, token);
+    } else if (answers.option == '2) cubic root (clearance level 2)') {
+      squareCubicRoot(2, answers.value, token);
+    }
+    else if (answers.option == '3) parameterized n root (clearance level 3)') {
+      paramRoot(answers.value, token);
+    }
+    else process.exit();
+  });
+
+}
+const consoleMenu = async (sessionInfo) => {
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "option",
+        message: "What do you want to do?\n",
+        choices: ['1) Calculate a root', '2) Quit'],
+      },
+    ])
+    .then(async(answer) => {
+      if (answer.option == '1) Calculate a root') {
+        let token = sessionInfo.user_private_info.sessionToken;
+        await rootCalc(token);
+      } else process.exit();
+    });
+};
+
+const registerLogin = async () => {
+  await inquirer
+  .prompt([
+    {
+      type: "list",
+      name: "option",
+      message: "What do you want to do?\n",
+      choices: ['1) Register', '2) Login', '3) Quit'],
+    },
+  ])
+  .then(async (answer) => {
+    if (answer.option == '1) Register') {
+      await register();
+      const sessionInfo = await localLogin();
+      await consoleMenu(sessionInfo);
+    }
+    else if ( answer.option == '2) Login'){
+      const sessionInfo = await localLogin();
+      await consoleMenu(sessionInfo);
+    }
+     else process.exit();
+  });
 };
 
 async function mainLoop() {
-  await register();
-  await localLogin();
+  await registerLogin();
 }
 
 module.exports = mainLoop;

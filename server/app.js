@@ -1,6 +1,7 @@
 const express = require("express");
 
 const userRouter = require("./routes/users");
+const servicesRouter = require("./routes/services");
 
 require('dotenv').config();
 
@@ -15,3 +16,5 @@ app.listen(port, () => {
 });
 
 app.use("/api/users", userRouter);
+app.use("/api/services", servicesRouter);
+
