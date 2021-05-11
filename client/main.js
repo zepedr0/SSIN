@@ -212,6 +212,7 @@ const rootCalc = async (token) => {
   });
 
 }
+
 const consoleMenu = async (sessionInfo) => {
   await inquirer
     .prompt([
