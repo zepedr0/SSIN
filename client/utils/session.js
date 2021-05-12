@@ -1,18 +1,21 @@
 const fs = require("fs");
 const path = require("path");
 const cryptography = require("./cryptography");
+const crypto = require("crypto");
 
 // Store new session
 const saveSession = (username, one_time_id, decToken, password) => {
-  cryptography.generatePubPrivKeys(one_time_id, password);
+  const salt = crypto.randomBytes(32);
+  const key = cryptography.generatePBKDF(password, salt);
 
-  const encUserPrivateInfo = cryptography.encrypt(
+  const encUserPrivateInfo = cryptography.localEncrypt(
     JSON.stringify({ username, sessionToken: decToken }),
-    one_time_id
+    key
   );
 
   const sessionInfo = {
     one_time_id,
+    salt: salt.toString("hex"),
     user_private_info: encUserPrivateInfo,
   };
 
@@ -29,14 +32,15 @@ const login = (password) => {
   });
 
   let sessionFileDataJSON = JSON.parse(sessionFileData);
-  const { one_time_id } = sessionFileDataJSON;
+  const { one_time_id, salt } = sessionFileDataJSON;
+
+  const key = cryptography.generatePBKDF(password, Buffer.from(salt, "hex"));
 
   let userInfo;
   try {
-    userInfo = cryptography.decrypt(
-      password,
+    userInfo = cryptography.localDecrypt(
       sessionFileDataJSON.user_private_info,
-      one_time_id
+      key
     );
   } catch (err) {
     // console.log(err);
