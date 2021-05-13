@@ -50,7 +50,7 @@ const generatePBKDF = (password, salt, cost = 100000, digest = "sha512") => {
   return derivedKey;
 };
 
-const generatePubPrivKeys = (one_time_id, passphrase) => {
+const generatePubPrivKeys = (passphrase) => {
   const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 4096,
     publicKeyEncoding: {
@@ -65,15 +65,7 @@ const generatePubPrivKeys = (one_time_id, passphrase) => {
     },
   });
 
-  const dir = path.join(__dirname, "..", "data", one_time_id);
-
-  // If user does not have a directory yet
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
-  }
-
-  fs.writeFileSync(`${dir}/private.pem`, privateKey);
-  fs.writeFileSync(`${dir}/public.pem`, publicKey);
+  return [privateKey, publicKey];
 };
 
 const localEncrypt = (toEncrypt, key) => {
