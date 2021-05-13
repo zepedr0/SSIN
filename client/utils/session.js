@@ -1,14 +1,15 @@
+const Cryptography = require("./cryptography");
+const Files = require("./files");
+
 const fs = require("fs");
-const path = require("path");
-const cryptography = require("./cryptography");
 const crypto = require("crypto");
 
 // Store new session
 const saveSession = (username, one_time_id, decToken, password) => {
   const salt = crypto.randomBytes(32);
-  const key = cryptography.generatePBKDF(password, salt);
+  const key = Cryptography.generatePBKDF(password, salt);
 
-  const encUserPrivateInfo = cryptography.localEncrypt(
+  const encUserPrivateInfo = Cryptography.localEncrypt(
     JSON.stringify({ username, sessionToken: decToken }),
     key
   );
@@ -22,6 +23,16 @@ const saveSession = (username, one_time_id, decToken, password) => {
   // Writes encrypted session info to a file
   fs.writeFileSync("./data/Session.json", JSON.stringify(sessionInfo));
 
+  // Create user directory
+  Files.createFolder(one_time_id);
+  // Genereate pub and priv keys for communication
+  const [privateKey, publicKey] = Cryptography.generatePubPrivKeys(password);
+  // Store keys
+  Files.createFile(one_time_id, 'private.pem', privateKey);
+  Files.createFile(one_time_id, 'public.pem', publicKey);
+  // Initialize msgs file
+  Files.createFile(one_time_id, 'msgs.json', JSON.stringify([]));
+
   console.log("Session Info Stored \n");
 };
 
@@ -34,11 +45,11 @@ const login = (password) => {
   let sessionFileDataJSON = JSON.parse(sessionFileData);
   const { one_time_id, salt } = sessionFileDataJSON;
 
-  const key = cryptography.generatePBKDF(password, Buffer.from(salt, "hex"));
+  const key = Cryptography.generatePBKDF(password, Buffer.from(salt, "hex"));
 
   let userInfo;
   try {
-    userInfo = cryptography.localDecrypt(
+    userInfo = Cryptography.localDecrypt(
       sessionFileDataJSON.user_private_info,
       key
     );
@@ -56,16 +67,10 @@ const login = (password) => {
   return { success: true, sessionInfo: sessionFileDataJSON };
 };
 
-const exists = () => {
-  const filePath = path.join(__dirname, "..", "data", "Session.json");
-  return fs.existsSync(filePath);
-};
-
 const logout = () => {};
 
 module.exports = {
   saveSession,
   login,
   logout,
-  exists,
 };
