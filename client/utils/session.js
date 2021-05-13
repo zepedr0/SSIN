@@ -3,35 +3,62 @@ const Files = require("./files");
 
 const fs = require("fs");
 const crypto = require("crypto");
+const path = require("path");
 
 // Store new session
 const saveSession = (username, one_time_id, decToken, password) => {
+  // Create user directory
+  Files.createFolder(one_time_id);
+
   const salt = crypto.randomBytes(32);
+
+  // Store Salt
+  Files.createFile(one_time_id, "Salt", salt.toString("hex"));
+
+  // Generate Key
   const key = Cryptography.generatePBKDF(password, salt);
 
+  // Encrypt private info with key
   const encUserPrivateInfo = Cryptography.localEncrypt(
-    JSON.stringify({ username, sessionToken: decToken }),
+    JSON.stringify({ sessionToken: decToken }),
     key
   );
 
   const sessionInfo = {
     one_time_id,
-    salt: salt.toString("hex"),
+    username,
     user_private_info: encUserPrivateInfo,
   };
 
   // Writes encrypted session info to a file
-  fs.writeFileSync("./data/Session.json", JSON.stringify(sessionInfo));
+  Files.createFile(
+    one_time_id,
+    "SessionInfo.json",
+    JSON.stringify(sessionInfo)
+  );
 
-  // Create user directory
-  Files.createFolder(one_time_id);
+  // Search for correspondences already stored
+  const dir = path.join(__dirname, "..", "data");
+  let matches = {};
+  if (fs.existsSync(`${dir}/Map.json`)) {
+    matches = fs.readFileSync(`${dir}/Map.json`);
+  }
+
+  // Appends the new one
+  matches[username] = one_time_id;
+
+  // Writes username: onde_time_id to json file
+  fs.writeFileSync(`${dir}/Map.json`, JSON.stringify(matches));
+
   // Genereate pub and priv keys for communication
   const [privateKey, publicKey] = Cryptography.generatePubPrivKeys(password);
+
   // Store keys
-  Files.createFile(one_time_id, 'private.pem', privateKey);
-  Files.createFile(one_time_id, 'public.pem', publicKey);
+  Files.createFile(one_time_id, "private.pem", privateKey);
+  Files.createFile(one_time_id, "public.pem", publicKey);
+
   // Initialize msgs file
-  Files.createFile(one_time_id, 'msgs.json', JSON.stringify([]));
+  Files.createFile(one_time_id, "msgs.json", JSON.stringify([]));
 
   console.log("Session Info Stored \n");
 };
