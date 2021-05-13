@@ -39,13 +39,13 @@ const saveSession = (username, one_time_id, decToken, password) => {
 
   // Search for correspondences already stored
   const dir = path.join(__dirname, "..", "data");
-  let matches = {};
+  let matches = [];
   if (fs.existsSync(`${dir}/Map.json`)) {
     matches = fs.readFileSync(`${dir}/Map.json`);
   }
 
   // Appends the new one
-  matches[username] = one_time_id;
+  matches.push({ one_time_id, username });
 
   // Writes username: onde_time_id to json file
   fs.writeFileSync(`${dir}/Map.json`, JSON.stringify(matches));
@@ -63,17 +63,44 @@ const saveSession = (username, one_time_id, decToken, password) => {
   console.log("Session Info Stored \n");
 };
 
-const login = (password) => {
-  // Reads encypted session token from file
-  const sessionFileData = fs.readFileSync("./data/Session.json", {
+const login = (username, password) => {
+  // Reads username: one_time_id correspondences
+  const matches = fs.readFileSync("./data/Map.json", {
     encoding: "utf8",
   });
 
-  let sessionFileDataJSON = JSON.parse(sessionFileData);
-  const { one_time_id, salt } = sessionFileDataJSON;
+  // Parse to JSON
+  const matchesJSON = JSON.parse(matches);
 
+  // Search for the entered username, to find the right data folder to decrypt data
+  const searchObj = matchesJSON.find((v) => v.username === username);
+  const { one_time_id } = searchObj;
+
+  if (!one_time_id) {
+    return {
+      success: false,
+      reason: "User does not have a session started in this client",
+    };
+  }
+  // Reads session info from file (plain text + encrypted data)
+  const sessionFileData = fs.readFileSync(
+    `./data/${one_time_id}/SessionInfo.json`,
+    {
+      encoding: "utf8",
+    }
+  );
+  // Parse to JSON
+  let sessionFileDataJSON = JSON.parse(sessionFileData);
+
+  // Reads salt from file
+  const salt = fs.readFileSync(`./data/${one_time_id}/Salt`, {
+    encoding: "utf8",
+  });
+
+  // Generates key with entered password and salt
   const key = Cryptography.generatePBKDF(password, Buffer.from(salt, "hex"));
 
+  // Decrypt session token
   let userInfo;
   try {
     userInfo = Cryptography.localDecrypt(
@@ -90,6 +117,7 @@ const login = (password) => {
     }
   }
 
+  // Return the session object, but the encrypted section is now decrypted
   sessionFileDataJSON.user_private_info = JSON.parse(userInfo);
   return { success: true, sessionInfo: sessionFileDataJSON };
 };

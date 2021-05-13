@@ -37,7 +37,10 @@ const registerMenu = async () => {
 
   await inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
-    const registerResult = await Authentication.requestRegister(username, one_time_id);
+    const registerResult = await Authentication.requestRegister(
+      username,
+      one_time_id
+    );
 
     // If register was successful, registerResult has the Session token
     if (!registerResult) {
@@ -59,15 +62,24 @@ const loginMenu = async () => {
   let nFailedLogins = 0;
   let loginAnswer;
   do {
-    const password = await Authentication.askUserPassword(
-      "Session found enter the password to login"
+    const username = await Authentication.askUsername(
+      "[Login] Please enter your username"
     );
+
+    if (!username) {
+      return;
+    }
+
+    const password = await Authentication.askUserPassword(
+      "[Login] Please enter your password"
+    );
+
     if (!password) {
       return;
     }
 
     // Retrieves session info from Session file
-    loginAnswer = Session.login(password);
+    loginAnswer = Session.login(username, password);
     if (loginAnswer.success === false) {
       if (loginAnswer.reason === "Wrong Password") {
         nFailedLogins++;
@@ -83,8 +95,6 @@ const loginMenu = async () => {
     return;
   }
 
-  // console.log("Session Info:");
-  // console.log(loginAnswer.sessionInfo);
   return loginAnswer.sessionInfo;
 };
 
