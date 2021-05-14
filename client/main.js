@@ -115,19 +115,23 @@ const consoleMenu = async (sessionInfo) => {
         choices: [
           "1) Calculate a root",
           "2) See messages",
-          "3) Logout",
+          "3) End this client's session on your account",
           "4) Quit",
         ],
       },
     ])
     .then(async (answer) => {
-      if (answer.option === "1) Calculate a root") {
+      const answerNumber = answer.option.split(" ")[0];
+      if (answerNumber === "1)") {
         const token = sessionInfo.user_private_info.sessionToken;
         await Services.rootCalc(token);
-      } else if (answer.option === "3) Logout") {
+      } else if (answerNumber === "3)") {
         const token = sessionInfo.user_private_info.sessionToken;
-        const res = await Authentication.requestLogout(token);
+
+        const res = await Session.requestEnd(token);
         console.log(`Logout:${res}`);
+
+        // Server ended this client's session on that account
         if (res) {
           Files.deleteFile(sessionInfo.one_time_id, "SessionInfo.json");
         }

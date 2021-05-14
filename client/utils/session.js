@@ -4,6 +4,9 @@ const Files = require("./files");
 const fs = require("fs");
 const crypto = require("crypto");
 const path = require("path");
+const axios = require("axios");
+
+const api = "http://localhost:3000/api/";
 
 // Store new session
 const saveSession = (username, one_time_id, decToken, password) => {
@@ -128,8 +131,25 @@ const inThisClient = (one_time_id) => {
   return Files.existsFile(one_time_id, "SessionInfo.json");
 };
 
+const requestEnd = (token) => {
+  // Logout
+  return axios
+    .post(`${api}users/logout`, null, {
+      headers: { token },
+    })
+    .then((answer) => {
+      return answer.data.success;
+    })
+    .catch((error) => {
+      console.log("Logout Request Failed");
+      console.log(error);
+      return false;
+    });
+};
+
 module.exports = {
   saveSession,
   login,
   inThisClient,
+  requestEnd,
 };

@@ -74,25 +74,8 @@ const askUsername = async (message) => {
     });
 };
 
-const requestLogout = (token) => {
-  // Logout
-  return axios
-    .post(`${api}users/logout`, null, {
-      headers: { token },
-    })
-    .then((answer) => {
-      return answer.data.success;
-    })
-    .catch((error) => {
-      console.log("Logout Request Failed");
-      console.log(error);
-      return false;
-    });
-};
-
 module.exports = {
   askUserPassword,
   requestRegister,
   askUsername,
-  requestLogout,
 };
