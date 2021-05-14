@@ -12,5 +12,6 @@ router.get(
   userController.getAllUsers
 );
 router.post("/register", userController.registerUser);
+router.post("/logout", validateToken, userController.logoutClient);
 
 module.exports = router;
