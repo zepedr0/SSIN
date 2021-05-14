@@ -38,6 +38,12 @@ const registerMenu = async () => {
 
   await inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
+
+    if (Session.inThisClient(one_time_id)) {
+      console.log("You cannot register again. Please login instead");
+      return;
+    }
+
     const registerResult = await Authentication.requestRegister(
       username,
       one_time_id

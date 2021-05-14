@@ -124,10 +124,12 @@ const login = (username, password) => {
   return { success: true, sessionInfo: sessionFileDataJSON };
 };
 
-const logout = () => {};
+const inThisClient = (one_time_id) => {
+  return Files.existsFile(one_time_id, "SessionInfo.json");
+};
 
 module.exports = {
   saveSession,
   login,
-  logout,
+  inThisClient,
 };
