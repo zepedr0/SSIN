@@ -105,13 +105,22 @@ const consoleMenu = async (sessionInfo) => {
         type: "list",
         name: "option",
         message: "What do you want to do?\n",
-        choices: ["1) Calculate a root", "2) See messages", "3) Quit"],
+        choices: [
+          "1) Calculate a root",
+          "2) See messages",
+          "3) Logout",
+          "4) Quit",
+        ],
       },
     ])
     .then(async (answer) => {
-      if (answer.option == "1) Calculate a root") {
-        let token = sessionInfo.user_private_info.sessionToken;
+      if (answer.option === "1) Calculate a root") {
+        const token = sessionInfo.user_private_info.sessionToken;
         await Services.rootCalc(token);
+      } else if (answer.option === "3) Logout") {
+        const token = sessionInfo.user_private_info.sessionToken;
+        const res = await Authentication.requestLogout(token);
+        console.log(`Logout:${res}`);
       } else process.exit();
     });
 };

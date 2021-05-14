@@ -59,7 +59,7 @@ const registerUser = (req, res) => {
 };
 
 const logoutClient = (req, res) => {
-  const { username } = req.auth_user.credentials;
+  const { username } = req.body.auth_user.credentials;
   setSessionState(username, false);
 
   return res.status(200).json({ success: true });
