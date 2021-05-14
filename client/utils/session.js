@@ -8,7 +8,9 @@ const path = require("path");
 // Store new session
 const saveSession = (username, one_time_id, decToken, password) => {
   // Create user directory
-  Files.createFolder(one_time_id);
+  if (!Files.existsDir(one_time_id)) {
+    Files.createFolder(one_time_id);
+  }
 
   const salt = crypto.randomBytes(32);
 
@@ -41,7 +43,7 @@ const saveSession = (username, one_time_id, decToken, password) => {
   const dir = path.join(__dirname, "..", "data");
   let matches = [];
   if (fs.existsSync(`${dir}/Map.json`)) {
-    matches = fs.readFileSync(`${dir}/Map.json`);
+    matches = JSON.parse(fs.readFileSync(`${dir}/Map.json`));
   }
 
   // Appends the new one

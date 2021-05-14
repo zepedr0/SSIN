@@ -3,6 +3,7 @@ const inquirer = require("inquirer");
 const Authentication = require("./utils/authentication");
 const Services = require("./utils/services");
 const Session = require("./utils/session");
+const Files = require("./utils/files");
 
 const registerMenu = async () => {
   console.log("Register user");
@@ -121,6 +122,9 @@ const consoleMenu = async (sessionInfo) => {
         const token = sessionInfo.user_private_info.sessionToken;
         const res = await Authentication.requestLogout(token);
         console.log(`Logout:${res}`);
+        if (res) {
+          Files.deleteFile(sessionInfo.one_time_id, "SessionInfo.json");
+        }
       } else process.exit();
     });
 };
