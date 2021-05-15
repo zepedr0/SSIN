@@ -1,6 +1,8 @@
 const inquirer = require("inquirer");
 
 const Authentication = require("./utils/authentication");
+const Cryptography = require("./utils/cryptography");
+const Messages = require("./utils/messages");
 const Services = require("./utils/services");
 const Session = require("./utils/session");
 
@@ -95,14 +97,35 @@ const consoleMenu = async (sessionInfo) => {
         type: "list",
         name: "option",
         message: "What do you want to do?\n",
-        choices: ["1) Calculate a root", "2) See messages", "3) Quit"],
+        choices: ["1) Calculate a root", "2) Store message", "3) See messages", "3) Quit"],
       },
     ])
     .then(async (answer) => {
       if (answer.option == "1) Calculate a root") {
         let token = sessionInfo.user_private_info.sessionToken;
         await Services.rootCalc(token);
-      } else process.exit();
+      } 
+      else if (answer.option == "2) Store message") {
+        const msg = 'Secret msg';
+        const sig = 'Secret sig';
+        const pass = await Authentication.askUserPassword('Type your password to encrypt your message');
+        const salt = sessionInfo.salt;
+        const k = Cryptography.generatePBKDF(pass, salt);
+        const encMsg = Cryptography.localEncrypt(msg, k);
+        const encSig = Cryptography.localEncrypt(sig, k);
+        Messages.storeMessage(sessionInfo.one_time_id, encMsg, encSig);
+      } else if (answer.option == "3) See messages")  {
+        const msgs = Messages.getMessages(sessionInfo.one_time_id);
+        const pass = await Authentication.askUserPassword('Type your password to decrypt your messages');
+        const salt = sessionInfo.salt;
+        const k = Cryptography.generatePBKDF(pass, salt);
+        msgs.forEach((msg, i) => {
+          const decMsg = Cryptography.localDecrypt(msg.msg, k);
+          const encSig = Cryptography.localDecrypt(msg.signature, k);
+          console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
+        });
+      }
+      else process.exit();
     });
 };
 

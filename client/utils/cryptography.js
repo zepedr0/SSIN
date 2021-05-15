@@ -90,7 +90,11 @@ const localDecrypt = (toDecrypt, key) => {
     iv
   );
   let decrypted = decipher.update(encryptedText);
-  decrypted = Buffer.concat([decrypted, decipher.final()]);
+  try {
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+  } catch {
+    decrypted = "## INVALID DECRYPT ##";
+  }
   return decrypted.toString();
 };
 
