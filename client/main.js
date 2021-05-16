@@ -106,16 +106,18 @@ const consoleMenu = async (sessionInfo) => {
         await Services.rootCalc(token);
       } 
       else if (answer.option == "2) Store message") {
-        const msg = 'Secret msg';
-        const sig = 'Secret sig';
+        const sender_id = '111';
+        const msg = '111 msg';
+        const sig = '111 sig';
         const pass = await Authentication.askUserPassword('Type your password to encrypt your message');
         const salt = sessionInfo.salt;
         const k = Cryptography.generatePBKDF(pass, salt);
         const encMsg = Cryptography.localEncrypt(msg, k);
         const encSig = Cryptography.localEncrypt(sig, k);
-        Messages.storeMessage(sessionInfo.one_time_id, encMsg, encSig);
+        Messages.storeMessage(sessionInfo.one_time_id, sender_id, encMsg, encSig);
       } else if (answer.option == "3) See messages")  {
-        const msgs = Messages.getMessages(sessionInfo.one_time_id);
+        const sender_id = '111';
+        const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
         const pass = await Authentication.askUserPassword('Type your password to decrypt your messages');
         const salt = sessionInfo.salt;
         const k = Cryptography.generatePBKDF(pass, salt);
