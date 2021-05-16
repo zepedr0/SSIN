@@ -123,11 +123,13 @@ const consoleMenu = async (sessionInfo) => {
     .then(async (answer) => {
       const answerNumber = answer.option.split(" ")[0];
       switch (answerNumber) {
-        case "1)":
+        case "1)": {
           const token = sessionInfo.user_private_info.sessionToken;
           await Services.rootCalc(token);
+
           break;
-        case "3)":
+        }
+        case "3)": {
           const token = sessionInfo.user_private_info.sessionToken;
 
           const res = await Session.requestEnd(token);
@@ -137,8 +139,12 @@ const consoleMenu = async (sessionInfo) => {
           if (res) {
             Files.deleteFile(sessionInfo.one_time_id, "SessionInfo.json");
           }
-        default:
+
+          break;
+        }
+        default: {
           process.exit();
+        }
       }
     });
 };

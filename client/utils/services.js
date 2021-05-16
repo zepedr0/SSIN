@@ -32,18 +32,23 @@ const rootCalc = async (token) => {
 
   inquirer.prompt(service_questions).then((answers) => {
     const answerNumber = answers.option.split(" ")[0];
+
     switch (answerNumber) {
-      case "1)":
+      case "1)": {
         squareCubicRoot(1, answers.value, token);
         break;
-      case "2)":
+      }
+      case "2)": {
         squareCubicRoot(2, answers.value, token);
         break;
-      case "3)":
+      }
+      case "3)": {
         paramRoot(answers.value, token);
         break;
-      default:
+      }
+      default: {
         process.exit();
+      }
     }
   });
 };
