@@ -31,15 +31,20 @@ const rootCalc = async (token) => {
   ];
 
   inquirer.prompt(service_questions).then((answers) => {
-    if (answers.option == "1) square root (clearance level 1)") {
-      squareCubicRoot(1, answers.value, token);
-    } else if (answers.option == "2) cubic root (clearance level 2)") {
-      squareCubicRoot(2, answers.value, token);
-    } else if (
-      answers.option == "3) parameterized n root (clearance level 3)"
-    ) {
-      paramRoot(answers.value, token);
-    } else process.exit();
+    const answerNumber = answers.option.split(" ")[0];
+    switch (answerNumber) {
+      case "1)":
+        squareCubicRoot(1, answers.value, token);
+        break;
+      case "2)":
+        squareCubicRoot(2, answers.value, token);
+        break;
+      case "3)":
+        paramRoot(answers.value, token);
+        break;
+      default:
+        process.exit();
+    }
   });
 };
 

@@ -122,20 +122,24 @@ const consoleMenu = async (sessionInfo) => {
     ])
     .then(async (answer) => {
       const answerNumber = answer.option.split(" ")[0];
-      if (answerNumber === "1)") {
-        const token = sessionInfo.user_private_info.sessionToken;
-        await Services.rootCalc(token);
-      } else if (answerNumber === "3)") {
-        const token = sessionInfo.user_private_info.sessionToken;
+      switch (answerNumber) {
+        case "1)":
+          const token = sessionInfo.user_private_info.sessionToken;
+          await Services.rootCalc(token);
+          break;
+        case "3)":
+          const token = sessionInfo.user_private_info.sessionToken;
 
-        const res = await Session.requestEnd(token);
-        console.log(`Logout:${res}`);
+          const res = await Session.requestEnd(token);
+          console.log(`Logout:${res}`);
 
-        // Server ended this client's session on that account
-        if (res) {
-          Files.deleteFile(sessionInfo.one_time_id, "SessionInfo.json");
-        }
-      } else process.exit();
+          // Server ended this client's session on that account
+          if (res) {
+            Files.deleteFile(sessionInfo.one_time_id, "SessionInfo.json");
+          }
+        default:
+          process.exit();
+      }
     });
 };
 
