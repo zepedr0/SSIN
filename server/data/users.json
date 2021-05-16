@@ -18,5 +18,25 @@
       "username": "usefname"
     },
     "clearance_level": 1
+  },
+  {
+    "identity": {
+      "full_name": "Luigi"
+    },
+    "credentials": {
+      "one_time_id": "23axg1j5a756",
+      "username": "luigi"
+    },
+    "clearance_level": 2
+  },
+  {
+    "identity": {
+      "full_name": "Mario"
+    },
+    "credentials": {
+      "one_time_id": "ng71ndsAn13b",
+      "username": "mario"
+    },
+    "clearance_level": 2
   }
 ]

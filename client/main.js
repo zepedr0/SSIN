@@ -5,6 +5,8 @@ const Cryptography = require("./utils/cryptography");
 const Messages = require("./utils/messages");
 const Services = require("./utils/services");
 const Session = require("./utils/session");
+const MessagesServer = require('./utils/messagesServer')
+const Chat = require('./utils/chat')
 
 const registerMenu = async () => {
   console.log("Register user");
@@ -97,7 +99,7 @@ const consoleMenu = async (sessionInfo) => {
         type: "list",
         name: "option",
         message: "What do you want to do?\n",
-        choices: ["1) Calculate a root", "2) Store message", "3) See messages", "3) Quit"],
+        choices: ["1) Calculate a root", "2) Store message", "3) See messages", "4) Send Message", "5) Quit"],
       },
     ])
     .then(async (answer) => {
@@ -126,6 +128,10 @@ const consoleMenu = async (sessionInfo) => {
           const encSig = Cryptography.localDecrypt(msg.signature, k);
           console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
         });
+      } else if (answer.option === "4) Send Message") {
+        const username = sessionInfo.user_private_info.username
+        // TODO: mudar para chatMenu
+        await Chat.chat(username)
       }
       else process.exit();
     });
@@ -148,6 +154,8 @@ const mainLoop = async () => {
         await consoleMenu(sessionInfo);
       } else if (answer.option == "2) Login") {
         const sessionInfo = await loginMenu();
+        // TODO: quando o user der logout fechar o server, createMessageServer retorna a instancia do server, fazer server.close()
+        MessagesServer.createMessageServer(sessionInfo.user_private_info.username)
         await consoleMenu(sessionInfo);
       } else process.exit();
     });
