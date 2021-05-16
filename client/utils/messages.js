@@ -1,42 +1,26 @@
 var fs = require("fs");
 const path = require("path");
+const Files = require("./files");
 
-// Stores a message in user's directory
-const storeMessage = (one_time_id, msg, signature) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
-  const filepath = path.join(__dirname, "..", "data", one_time_id, "msgs.json");
+// Stores a message sent by a sender
+const storeMessage = (recipient_one_time_id, sender_one_time_id, msg, signature) => {
+  
+  const filepath = path.join(__dirname, "..", "data", recipient_one_time_id, `${sender_one_time_id}.json`);
+  let msgs = [];
 
-  // If user does not have a directory yet
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
-  }
+  // Check if file exists and load msgs;
+  if (fs.existsSync(filepath)) msgs = require(filepath);
 
-  console.log(filepath);
-  console.log();
-
-  // If msgs file does not exist
-  if (!fs.existsSync(filepath)) {
-    fs.writeFileSync(filepath, JSON.stringify([]), function (err) {
-      if (err) throw err;
-      console.log("Saved!");
-    });
-  }
-
-  // Get msgs and add new one
-  const msgs = require(filepath);
   msgs.push({ msg, signature });
 
-  fs.writeFileSync(filepath, JSON.stringify(msgs), function (err) {
-    if (err) throw err;
-    console.log("Saved!");
-  });
+  Files.createFile(recipient_one_time_id, `${sender_one_time_id}.json`, JSON.stringify(msgs));
 };
 
-// Returns all user messages
-const getMessages = (one_time_id) => {
-  const filepath = path.join(__dirname, "..", "data", one_time_id, "msgs.json");
+// Returns all messages sent by a sender
+const getMessages = (recipient_one_time_id, sender_one_time_id) => {
+  const filepath = path.join(__dirname, "..", "data", recipient_one_time_id, `${sender_one_time_id}.json`);
 
-  if (!fs.existsSync(filepath)) return [];
+  if (!fs.existsSync(filepath)) return null;
 
   const msgs = require(filepath);
   return msgs;

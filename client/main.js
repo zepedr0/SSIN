@@ -1,6 +1,8 @@
 const inquirer = require("inquirer");
 
 const Authentication = require("./utils/authentication");
+const Cryptography = require("./utils/cryptography");
+const Messages = require("./utils/messages");
 const Services = require("./utils/services");
 const Session = require("./utils/session");
 const Files = require("./utils/files");
@@ -114,9 +116,10 @@ const consoleMenu = async (sessionInfo) => {
         message: "What do you want to do?\n",
         choices: [
           "1) Calculate a root",
-          "2) See messages",
-          "3) End this client's session on your account",
-          "4) Quit",
+          "2) Store message",
+          "3) See messages",
+          "8) Quit",
+          "9) End this client's session on your account",
         ],
       },
     ])
@@ -129,7 +132,43 @@ const consoleMenu = async (sessionInfo) => {
 
           break;
         }
+        case "2)": {
+          const sender_id = "111";
+          const msg = "111 msg";
+          const sig = "111 sig";
+          const pass = await Authentication.askUserPassword(
+            "Type your password to encrypt your message"
+          );
+          const salt = sessionInfo.salt;
+          const k = Cryptography.generatePBKDF(pass, salt);
+          const encMsg = Cryptography.localEncrypt(msg, k);
+          const encSig = Cryptography.localEncrypt(sig, k);
+          Messages.storeMessage(
+            sessionInfo.one_time_id,
+            sender_id,
+            encMsg,
+            encSig
+          );
+
+          break;
+        }
         case "3)": {
+          const sender_id = "111";
+          const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
+          const pass = await Authentication.askUserPassword(
+            "Type your password to decrypt your messages"
+          );
+          const salt = sessionInfo.salt;
+          const k = Cryptography.generatePBKDF(pass, salt);
+          msgs.forEach((msg, i) => {
+            const decMsg = Cryptography.localDecrypt(msg.msg, k);
+            const encSig = Cryptography.localDecrypt(msg.signature, k);
+            console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
+          });
+
+          break;
+        }
+        case "9)": {
           const token = sessionInfo.user_private_info.sessionToken;
 
           const res = await Session.requestEnd(token);

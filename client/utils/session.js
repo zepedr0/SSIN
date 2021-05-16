@@ -59,11 +59,8 @@ const saveSession = (username, one_time_id, decToken, password) => {
   const [privateKey, publicKey] = Cryptography.generatePubPrivKeys(password);
 
   // Store keys
-  Files.createFile(one_time_id, "private.pem", privateKey);
-  Files.createFile(one_time_id, "public.pem", publicKey);
-
-  // Initialize msgs file
-  Files.createFile(one_time_id, "msgs.json", JSON.stringify([]));
+  Files.createFile(one_time_id, 'private.pem', privateKey);
+  Files.createFile(one_time_id, 'public.pem', publicKey);
 
   console.log("Session Info Stored \n");
 };
