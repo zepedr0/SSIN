@@ -59,8 +59,8 @@ const saveSession = (username, one_time_id, decToken, password) => {
   const [privateKey, publicKey] = Cryptography.generatePubPrivKeys(password);
 
   // Store keys
-  Files.createFile(one_time_id, 'private.pem', privateKey);
-  Files.createFile(one_time_id, 'public.pem', publicKey);
+  Files.createFile(one_time_id, "private.pem", privateKey);
+  Files.createFile(one_time_id, "public.pem", publicKey);
 
   console.log("Session Info Stored \n");
 };
@@ -103,20 +103,14 @@ const login = (username, password) => {
   const key = Cryptography.generatePBKDF(password, Buffer.from(salt, "hex"));
 
   // Decrypt session token
-  let userInfo;
-  try {
-    userInfo = Cryptography.localDecrypt(
-      sessionFileDataJSON.user_private_info,
-      key
-    );
-  } catch (err) {
-    // console.log(err);
-    if (err.code === "ERR_OSSL_EVP_BAD_DECRYPT") {
-      console.log("Wrong Password");
-      return { success: false, reason: "Wrong Password" };
-    } else {
-      return { success: false, reason: "Unknown" };
-    }
+  const userInfo = Cryptography.localDecrypt(
+    sessionFileDataJSON.user_private_info,
+    key
+  );
+
+  if (userInfo === "## INVALID DECRYPT ##") {
+    console.log("Wrong Password");
+    return { success: false, reason: "Wrong Password" };
   }
 
   // Return the session object, but the encrypted section is now decrypted
