@@ -155,12 +155,12 @@ const consoleMenu = async (sessionInfo) => {
         case "3)": {
           const sender_id = "111";
           const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
-          
+
           if (msgs === null) {
-            console.log(`No messages from ${sender_id} user`)
+            console.log(`No messages from ${sender_id} user`);
             break;
           }
-          
+
           const pass = await Authentication.askUserPassword(
             "Type your password to decrypt your messages"
           );
@@ -208,9 +208,19 @@ const mainLoop = async () => {
       if (answer.option == "1) Register") {
         await registerMenu();
         const sessionInfo = await loginMenu();
+
+        if (!sessionInfo) {
+          process.exit();
+        }
+
         await consoleMenu(sessionInfo);
       } else if (answer.option == "2) Login") {
         const sessionInfo = await loginMenu();
+
+        if (!sessionInfo) {
+          process.exit();
+        }
+
         await consoleMenu(sessionInfo);
       } else process.exit();
     });
