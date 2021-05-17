@@ -1,6 +1,8 @@
 const express = require("express");
 const mainLoop = require("./main");
 
+require('dotenv').config()
+
 // const app = express();
 // const port = 3001;
 

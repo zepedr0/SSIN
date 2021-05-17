@@ -1,7 +1,7 @@
 [
   {
     "identity": {
-      "full_name": "Nome de utilizador muito grande"
+      "full_name": "Username Real"
     },
     "credentials": {
       "one_time_id": "45a78b4f3456",
@@ -11,7 +11,7 @@
   },
   {
     "identity": {
-      "full_name": "Nome pequeno"
+      "full_name": "Usefname Silva"
     },
     "credentials": {
       "one_time_id": "45a78c4f3456",

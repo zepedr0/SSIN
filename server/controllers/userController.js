@@ -45,8 +45,41 @@ const registerUser = (req, res) => {
   return res.status(200).json({ token: auth_token });
 };
 
+const getUsersCommunicationInfo = (req, res) => {
+  const users = readJSONFile('./data/users.json')
+
+  const onlineUsers = users.map(user => {
+    return { 
+      full_name: user.identity.full_name, 
+      last_seen: user.last_seen,
+      port: user.port
+    }
+  })
+
+  res.status(200).send(onlineUsers)
+} 
+
+const postPort = (req, res) => {
+  const { port } = req.body
+
+  const usersDataPath = './data/users.json'
+  const users = readJSONFile(usersDataPath)
+  users.forEach(user => {
+    if (user.credentials.username === res.locals.username) {
+      user.last_seen = Date.now()
+      user.port = port
+    }
+  })
+
+  fs.writeFileSync(usersDataPath, JSON.stringify(users, null, 2))
+
+  res.status(201).send()
+}
+
 module.exports = {
   getAllUsers,
   registerUser,
   getUser,
+  getUsersCommunicationInfo,
+  postPort
 };

@@ -6,7 +6,8 @@ const Messages = require("./utils/messages");
 const Services = require("./utils/services");
 const Session = require("./utils/session");
 const MessagesServer = require('./utils/messagesServer')
-const Chat = require('./utils/chat')
+const Chat = require('./utils/chat');
+const CommunicationInfo = require("./utils/communication_info");
 
 const registerMenu = async () => {
   console.log("Register user");
@@ -92,6 +93,39 @@ const loginMenu = async () => {
   return loginAnswer.sessionInfo;
 };
 
+const chatMenu = async (username, token) => {
+  const usersInfo = await CommunicationInfo.getUsersCommunicationInfo(token)
+  const inquirerChoices = usersInfo.map((user, index) => {
+    let last_seen = 'Never'
+    if (user.last_seen !== undefined) {
+      options = {
+        dateStyle: 'short',
+        timeStyle: 'medium'
+      }
+      
+      last_seen = Intl.DateTimeFormat('pt-PT', options).format(new Date(user.last_seen))
+    }
+    return { name: `${index+1}) ${user.full_name} (Last Seen: ${last_seen})`, value: index }
+  })
+  inquirerChoices.push({ name: `${usersInfo.length+1}) Back`, value: usersInfo.length })
+  
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "option",
+        message: "Who do you want to message?\n",
+        choices: inquirerChoices,
+      },
+    ])
+    .then(async (answer) => {
+      if (answer.option >= 0 && answer.option < usersInfo.length) {
+        await Chat.chat(username, usersInfo[answer.option].port)
+        await chatMenu(username, token)
+      }
+    });
+}
+
 const consoleMenu = async (sessionInfo) => {
   await inquirer
     .prompt([
@@ -130,8 +164,10 @@ const consoleMenu = async (sessionInfo) => {
         });
       } else if (answer.option === "4) Send Message") {
         const username = sessionInfo.user_private_info.username
+        const token = sessionInfo.user_private_info.sessionToken
         // TODO: mudar para chatMenu
-        await Chat.chat(username)
+        await chatMenu(username, token)
+        await consoleMenu(sessionInfo)
       }
       else process.exit();
     });
@@ -156,6 +192,9 @@ const mainLoop = async () => {
         const sessionInfo = await loginMenu();
         // TODO: quando o user der logout fechar o server, createMessageServer retorna a instancia do server, fazer server.close()
         MessagesServer.createMessageServer(sessionInfo.user_private_info.username)
+          .then(server => {
+            CommunicationInfo.postPort(server.address().port, sessionInfo.user_private_info.sessionToken)
+          })
         await consoleMenu(sessionInfo);
       } else process.exit();
     });

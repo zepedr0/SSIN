@@ -30,7 +30,7 @@ const getMessages = (recipient_one_time_id, sender_one_time_id) => {
 };
 
 // send message
-const sendMessage = async (username, msg, receiverIpAddr, receiverPort) => {
+const sendMessage = async (username, msg, receiverPort) => {
   // TODO: alterar path, está hardcoded
   // const encPrivKey = fs.readFileSync(path.join(__dirname, '..', 'data', '45a78b4f3456', 'private.pem'))
   // const privKey = crypto.createPrivateKey({
@@ -52,7 +52,7 @@ const sendMessage = async (username, msg, receiverIpAddr, receiverPort) => {
       rejectUnauthorized: false
     })
     axios
-      .post(`https://${receiverIpAddr}:${receiverPort}/`, {
+      .post(`https://0.0.0.0:${receiverPort}/`, {
         // // TODO: alterar, está hardcoded
         // username: 'usefname',
         msg: msg,

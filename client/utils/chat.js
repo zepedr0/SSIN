@@ -1,24 +1,27 @@
+const util = require('util');
 const readline = require('readline')
 const { sendMessage } = require('./messages')
 
-const recursiveReadLine = (username, rl, exitCode) => {
-    rl.question('Write: ', (message) => {
-        if (message === exitCode) {
-            return rl.close()
-        }
-        // TODO: ip e porta estão hardcoded
-        sendMessage(username, message, 'localhost', 5000)
-        recursiveReadLine(username, rl, exitCode)
-    })
-}
-
-const chat = async (username) => {
+const chat = async (username, receiverPort) => {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     })
     
-    recursiveReadLine(username, rl, ':q')
+    const question = util.promisify(rl.question).bind(rl);
+    const exitCode = ':q'
+
+    const recursiveReadLine = async () => {
+        const message = await question('Write: ')
+        if (message === exitCode) {
+            return
+        }
+        sendMessage(username, message, receiverPort)
+        await recursiveReadLine()
+    }
+
+    await recursiveReadLine()
+    rl.close()
 }
 
 module.exports = {

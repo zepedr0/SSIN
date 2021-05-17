@@ -12,5 +12,7 @@ router.get(
   userController.getAllUsers
 );
 router.post("/register", userController.registerUser);
+router.get('/communication-info', validateToken, userController.getUsersCommunicationInfo)
+router.post('/communication-info', validateToken, userController.postPort)
 
 module.exports = router;

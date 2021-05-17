@@ -37,7 +37,7 @@ const createMessageServer = async (username) => {
 
     const server = https.createServer(options, app).listen(port, () => {
         // TODO: tirar esta mensagem
-        console.log(`Listening for messages at http://localhost:${server.address().port}`)
+        console.log(`Listening for messages at https://localhost:${server.address().port}`)
     })
 
     return server
