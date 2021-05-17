@@ -38,12 +38,12 @@ const registerMenu = async () => {
     },
   ];
 
-  await inquirer.prompt(register_questions).then(async (answers) => {
+  return await inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
 
     if (Session.inThisClient(one_time_id)) {
       console.log("You cannot register again. Please login instead");
-      return;
+      return { success: false };
     }
 
     const registerResult = await Authentication.requestRegister(
@@ -53,7 +53,7 @@ const registerMenu = async () => {
 
     // If register was successful, registerResult has the Session token
     if (!registerResult) {
-      return;
+      return { success: false };
     }
 
     const password = await Authentication.askUserPassword(
@@ -62,6 +62,8 @@ const registerMenu = async () => {
 
     // Starts Session
     Session.saveSession(username, one_time_id, registerResult, password);
+
+    return { success: true };
   });
 };
 
@@ -207,7 +209,12 @@ const mainLoop = async () => {
     ])
     .then(async (answer) => {
       if (answer.option == "1) Register") {
-        await registerMenu();
+        const register_result = await registerMenu();
+
+        if (!register_result.success) {
+          process.exit();
+        }
+
         const sessionInfo = await loginMenu();
 
         if (!sessionInfo) {
