@@ -76,14 +76,16 @@ const login = (username, password) => {
 
   // Search for the entered username, to find the right data folder to decrypt data
   const searchObj = matchesJSON.find((v) => v.username === username);
-  const { one_time_id } = searchObj;
 
-  if (!one_time_id) {
+  if (!searchObj) {
     return {
       success: false,
       reason: "User does not have a session started in this client",
     };
   }
+
+  const { one_time_id } = searchObj;
+
   // Reads session info from file (plain text + encrypted data)
   const sessionFileData = fs.readFileSync(
     `./data/${one_time_id}/SessionInfo.json`,

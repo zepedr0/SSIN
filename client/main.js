@@ -89,6 +89,7 @@ const loginMenu = async () => {
 
     // Retrieves session info from Session file
     loginAnswer = Session.login(username, password);
+    console.log(`Login failed. Reason: ${loginAnswer.reason}`);
     if (loginAnswer.success === false) {
       if (loginAnswer.reason === "Wrong Password") {
         nFailedLogins++;
