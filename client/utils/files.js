@@ -13,13 +13,25 @@ const createFolder = (one_time_id) => {
   fs.mkdirSync(dir);
 };
 
+const existsDir = (one_time_id) => {
+  const dir = path.join(__dirname, "..", "data", one_time_id);
+  return fs.existsSync(dir);
+};
+
 const existsFile = (one_time_id, filename) => {
   const dir = path.join(__dirname, "..", "data", one_time_id);
   return fs.existsSync(`${dir}/${filename}`);
+};
+
+const deleteFile = (one_time_id, filename) => {
+  const dir = path.join(__dirname, "..", "data", one_time_id);
+  fs.unlinkSync(`${dir}/${filename}`);
 };
 
 module.exports = {
   createFile,
   createFolder,
   existsFile,
+  deleteFile,
+  existsDir,
 };

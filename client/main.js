@@ -5,6 +5,7 @@ const Cryptography = require("./utils/cryptography");
 const Messages = require("./utils/messages");
 const Services = require("./utils/services");
 const Session = require("./utils/session");
+const Files = require("./utils/files");
 
 const registerMenu = async () => {
   console.log("Register user");
@@ -39,7 +40,16 @@ const registerMenu = async () => {
 
   await inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
-    const registerResult = await Authentication.requestRegister(username, one_time_id);
+
+    if (Session.inThisClient(one_time_id)) {
+      console.log("You cannot register again. Please login instead");
+      return;
+    }
+
+    const registerResult = await Authentication.requestRegister(
+      username,
+      one_time_id
+    );
 
     // If register was successful, registerResult has the Session token
     if (!registerResult) {
@@ -61,15 +71,24 @@ const loginMenu = async () => {
   let nFailedLogins = 0;
   let loginAnswer;
   do {
-    const password = await Authentication.askUserPassword(
-      "Session found enter the password to login"
+    const username = await Authentication.askUsername(
+      "[Login] Please enter your username"
     );
+
+    if (!username) {
+      return;
+    }
+
+    const password = await Authentication.askUserPassword(
+      "[Login] Please enter your password"
+    );
+
     if (!password) {
       return;
     }
 
     // Retrieves session info from Session file
-    loginAnswer = Session.login(password);
+    loginAnswer = Session.login(username, password);
     if (loginAnswer.success === false) {
       if (loginAnswer.reason === "Wrong Password") {
         nFailedLogins++;
@@ -85,8 +104,6 @@ const loginMenu = async () => {
     return;
   }
 
-  // console.log("Session Info:");
-  // console.log(loginAnswer.sessionInfo);
   return loginAnswer.sessionInfo;
 };
 
@@ -97,37 +114,83 @@ const consoleMenu = async (sessionInfo) => {
         type: "list",
         name: "option",
         message: "What do you want to do?\n",
-        choices: ["1) Calculate a root", "2) Store message", "3) See messages", "3) Quit"],
+        choices: [
+          "1) Calculate a root",
+          "2) Store message",
+          "3) See messages",
+          "8) Quit",
+          "9) End this client's session on your account",
+        ],
       },
     ])
     .then(async (answer) => {
-      if (answer.option == "1) Calculate a root") {
-        let token = sessionInfo.user_private_info.sessionToken;
-        await Services.rootCalc(token);
-      } 
-      else if (answer.option == "2) Store message") {
-        const sender_id = '111';
-        const msg = '111 msg';
-        const sig = '111 sig';
-        const pass = await Authentication.askUserPassword('Type your password to encrypt your message');
-        const salt = sessionInfo.salt;
-        const k = Cryptography.generatePBKDF(pass, salt);
-        const encMsg = Cryptography.localEncrypt(msg, k);
-        const encSig = Cryptography.localEncrypt(sig, k);
-        Messages.storeMessage(sessionInfo.one_time_id, sender_id, encMsg, encSig);
-      } else if (answer.option == "3) See messages")  {
-        const sender_id = '111';
-        const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
-        const pass = await Authentication.askUserPassword('Type your password to decrypt your messages');
-        const salt = sessionInfo.salt;
-        const k = Cryptography.generatePBKDF(pass, salt);
-        msgs.forEach((msg, i) => {
-          const decMsg = Cryptography.localDecrypt(msg.msg, k);
-          const encSig = Cryptography.localDecrypt(msg.signature, k);
-          console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
-        });
+      const answerNumber = answer.option.split(" ")[0];
+      switch (answerNumber) {
+        case "1)": {
+          const token = sessionInfo.user_private_info.sessionToken;
+          await Services.rootCalc(token);
+
+          break;
+        }
+        case "2)": {
+          const sender_id = "111";
+          const msg = "111 msg";
+          const sig = "111 sig";
+          const pass = await Authentication.askUserPassword(
+            "Type your password to encrypt your message"
+          );
+          const salt = Cryptography.getUserSalt(sessionInfo.one_time_id);
+          const k = Cryptography.generatePBKDF(pass, salt);
+          const encMsg = Cryptography.localEncrypt(msg, k);
+          const encSig = Cryptography.localEncrypt(sig, k);
+          Messages.storeMessage(
+            sessionInfo.one_time_id,
+            sender_id,
+            encMsg,
+            encSig
+          );
+
+          break;
+        }
+        case "3)": {
+          const sender_id = "111";
+          const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
+          
+          if (msgs === null) {
+            console.log(`No messages from ${sender_id} user`)
+            break;
+          }
+          
+          const pass = await Authentication.askUserPassword(
+            "Type your password to decrypt your messages"
+          );
+          const salt = Cryptography.getUserSalt(sessionInfo.one_time_id);
+          const k = Cryptography.generatePBKDF(pass, salt);
+          msgs.forEach((msg, i) => {
+            const decMsg = Cryptography.localDecrypt(msg.msg, k);
+            const encSig = Cryptography.localDecrypt(msg.signature, k);
+            console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
+          });
+
+          break;
+        }
+        case "9)": {
+          const token = sessionInfo.user_private_info.sessionToken;
+
+          const res = await Session.requestEnd(token);
+          console.log(`Logout:${res}`);
+
+          // Server ended this client's session on that account
+          if (res) {
+            Files.deleteFile(sessionInfo.one_time_id, "SessionInfo.json");
+          }
+
+          break;
+        }
+        default: {
+          process.exit();
+        }
       }
-      else process.exit();
     });
 };
 

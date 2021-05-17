@@ -98,6 +98,12 @@ const localDecrypt = (toDecrypt, key) => {
   return decrypted.toString();
 };
 
+const getUserSalt = (one_time_id) => {
+  const dir = path.join(__dirname, "..", "data", one_time_id);
+  const salt = fs.readFileSync(`${dir}/salt`, "utf8");
+  return salt;
+}
+
 module.exports = {
   encrypt,
   decrypt,
@@ -107,4 +113,5 @@ module.exports = {
   generatePBKDF,
   localEncrypt,
   localDecrypt,
+  getUserSalt,
 };
