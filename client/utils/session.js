@@ -86,6 +86,13 @@ const login = (username, password) => {
 
   const { one_time_id } = searchObj;
 
+  if (!Files.existsFile(one_time_id, "SessionInfo.json")) {
+    return {
+      success: false,
+      reason: "User does not have a session started in this client",
+    };
+  }
+
   // Reads session info from file (plain text + encrypted data)
   const sessionFileData = fs.readFileSync(
     `./data/${one_time_id}/SessionInfo.json`,
