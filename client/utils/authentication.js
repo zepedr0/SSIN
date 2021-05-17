@@ -39,9 +39,8 @@ const requestRegister = (username, one_time_id) => {
     .then((answer) => {
       return answer.data.token;
     })
-    .catch((error) => {
+    .catch(() => {
       console.log("Register Request Failed");
-      console.log(error);
       return null;
     });
 };

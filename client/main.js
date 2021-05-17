@@ -38,12 +38,12 @@ const registerMenu = async () => {
     },
   ];
 
-  await inquirer.prompt(register_questions).then(async (answers) => {
+  return await inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
 
     if (Session.inThisClient(one_time_id)) {
       console.log("You cannot register again. Please login instead");
-      return;
+      return { success: false };
     }
 
     const registerResult = await Authentication.requestRegister(
@@ -53,7 +53,7 @@ const registerMenu = async () => {
 
     // If register was successful, registerResult has the Session token
     if (!registerResult) {
-      return;
+      return { success: false };
     }
 
     const password = await Authentication.askUserPassword(
@@ -62,6 +62,8 @@ const registerMenu = async () => {
 
     // Starts Session
     Session.saveSession(username, one_time_id, registerResult, password);
+
+    return { success: true };
   });
 };
 
@@ -89,6 +91,7 @@ const loginMenu = async () => {
 
     // Retrieves session info from Session file
     loginAnswer = Session.login(username, password);
+    console.log(`Login failed. Reason: ${loginAnswer.reason}`);
     if (loginAnswer.success === false) {
       if (loginAnswer.reason === "Wrong Password") {
         nFailedLogins++;
@@ -155,12 +158,12 @@ const consoleMenu = async (sessionInfo) => {
         case "3)": {
           const sender_id = "111";
           const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
-          
+
           if (msgs === null) {
-            console.log(`No messages from ${sender_id} user`)
+            console.log(`No messages from ${sender_id} user`);
             break;
           }
-          
+
           const pass = await Authentication.askUserPassword(
             "Type your password to decrypt your messages"
           );
@@ -206,11 +209,26 @@ const mainLoop = async () => {
     ])
     .then(async (answer) => {
       if (answer.option == "1) Register") {
-        await registerMenu();
+        const register_result = await registerMenu();
+
+        if (!register_result.success) {
+          process.exit();
+        }
+
         const sessionInfo = await loginMenu();
+
+        if (!sessionInfo) {
+          process.exit();
+        }
+
         await consoleMenu(sessionInfo);
       } else if (answer.option == "2) Login") {
         const sessionInfo = await loginMenu();
+
+        if (!sessionInfo) {
+          process.exit();
+        }
+
         await consoleMenu(sessionInfo);
       } else process.exit();
     });

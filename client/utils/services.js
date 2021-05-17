@@ -3,6 +3,33 @@ const inquirer = require("inquirer");
 
 const api = "http://localhost:3000/api/";
 
+const askUserValue = async () => {
+  const value_question = [
+    {
+      type: "input",
+      name: "value",
+      message: "Enter the value: \n",
+      validate: (value) => {
+        if (isNaN(value)) {
+          return "please enter a number";
+        }
+        return true;
+      },
+    },
+  ];
+
+  return await inquirer
+    .prompt(value_question)
+    .then((answerValue) => {
+      return answerValue.value;
+    })
+    .catch((error) => {
+      console.log("Failed to retrieve value from user");
+      console.log(error);
+      return;
+    });
+};
+
 // Root Calculation Menu
 const rootCalc = async (token) => {
   const service_questions = [
@@ -17,33 +44,25 @@ const rootCalc = async (token) => {
         "4) Quit",
       ],
     },
-    {
-      type: "input",
-      name: "value",
-      message: "Enter the value: \n",
-      validate: (value) => {
-        if (isNaN(value)) {
-          return "please enter a number";
-        }
-        return true;
-      },
-    },
   ];
 
-  inquirer.prompt(service_questions).then((answers) => {
+  inquirer.prompt(service_questions).then(async (answers) => {
     const answerNumber = answers.option.split(" ")[0];
 
     switch (answerNumber) {
       case "1)": {
-        squareCubicRoot(1, answers.value, token);
+        const value = await askUserValue();
+        squareCubicRoot(1, value, token);
         break;
       }
       case "2)": {
-        squareCubicRoot(2, answers.value, token);
+        const value = await askUserValue();
+        squareCubicRoot(2, value, token);
         break;
       }
       case "3)": {
-        paramRoot(answers.value, token);
+        const value = await askUserValue();
+        paramRoot(value, token);
         break;
       }
       default: {
