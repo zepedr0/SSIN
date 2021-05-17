@@ -41,7 +41,7 @@ const registerMenu = async () => {
   return await inquirer.prompt(register_questions).then(async (answers) => {
     const { username, one_time_id } = answers;
 
-    if (Session.inThisClient(one_time_id)) {
+    if (Session.inThisClient(username)) {
       console.log("You cannot register again. Please login instead");
       return { success: false };
     }
@@ -61,7 +61,7 @@ const registerMenu = async () => {
     );
 
     // Starts Session
-    Session.saveSession(username, one_time_id, registerResult, password);
+    Session.saveSession(username, registerResult, password);
 
     return { success: true };
   });
@@ -91,7 +91,10 @@ const loginMenu = async () => {
 
     // Retrieves session info from Session file
     loginAnswer = Session.login(username, password);
-    console.log(`Login failed. Reason: ${loginAnswer.reason}`);
+    if (loginAnswer && !loginAnswer.success) {
+      console.log(`Login failed. Reason: ${loginAnswer.reason}`);
+    }
+    
     if (loginAnswer.success === false) {
       if (loginAnswer.reason === "Wrong Password") {
         nFailedLogins++;
@@ -142,12 +145,12 @@ const consoleMenu = async (sessionInfo) => {
           const pass = await Authentication.askUserPassword(
             "Type your password to encrypt your message"
           );
-          const salt = Cryptography.getUserSalt(sessionInfo.one_time_id);
+          const salt = Cryptography.getUserSalt(sessionInfo.username);
           const k = Cryptography.generatePBKDF(pass, salt);
           const encMsg = Cryptography.localEncrypt(msg, k);
           const encSig = Cryptography.localEncrypt(sig, k);
           Messages.storeMessage(
-            sessionInfo.one_time_id,
+            sessionInfo.username,
             sender_id,
             encMsg,
             encSig
@@ -157,7 +160,7 @@ const consoleMenu = async (sessionInfo) => {
         }
         case "3)": {
           const sender_id = "111";
-          const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
+          const msgs = Messages.getMessages(sessionInfo.username, sender_id);
 
           if (msgs === null) {
             console.log(`No messages from ${sender_id} user`);
@@ -167,7 +170,7 @@ const consoleMenu = async (sessionInfo) => {
           const pass = await Authentication.askUserPassword(
             "Type your password to decrypt your messages"
           );
-          const salt = Cryptography.getUserSalt(sessionInfo.one_time_id);
+          const salt = Cryptography.getUserSalt(sessionInfo.username);
           const k = Cryptography.generatePBKDF(pass, salt);
           msgs.forEach((msg, i) => {
             const decMsg = Cryptography.localDecrypt(msg.msg, k);
@@ -185,7 +188,7 @@ const consoleMenu = async (sessionInfo) => {
 
           // Server ended this client's session on that account
           if (res) {
-            Files.deleteFile(sessionInfo.one_time_id, "SessionInfo.json");
+            Files.deleteFile(sessionInfo.username, "SessionInfo.json");
           }
 
           break;

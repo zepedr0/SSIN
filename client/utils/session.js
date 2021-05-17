@@ -9,16 +9,16 @@ const axios = require("axios");
 const api = "http://localhost:3000/api/";
 
 // Store new session
-const saveSession = (username, one_time_id, decToken, password) => {
+const saveSession = (username, decToken, password) => {
   // Create user directory
-  if (!Files.existsDir(one_time_id)) {
-    Files.createFolder(one_time_id);
+  if (!Files.existsDir(username)) {
+    Files.createFolder(username);
   }
 
   const salt = crypto.randomBytes(32);
 
   // Store Salt
-  Files.createFile(one_time_id, "Salt", salt.toString("hex"));
+  Files.createFile(username, "Salt", salt.toString("hex"));
 
   // Generate Key
   const key = Cryptography.generatePBKDF(password, salt);
@@ -30,72 +30,38 @@ const saveSession = (username, one_time_id, decToken, password) => {
   );
 
   const sessionInfo = {
-    one_time_id,
     username,
     user_private_info: encUserPrivateInfo,
   };
 
   // Writes encrypted session info to a file
-  Files.createFile(
-    one_time_id,
-    "SessionInfo.json",
-    JSON.stringify(sessionInfo)
-  );
-
-  // Search for correspondences already stored
-  const dir = path.join(__dirname, "..", "data");
-  let matches = [];
-  if (fs.existsSync(`${dir}/Map.json`)) {
-    matches = JSON.parse(fs.readFileSync(`${dir}/Map.json`));
-  }
-
-  // Appends the new one
-  matches.push({ one_time_id, username });
-
-  // Writes username: onde_time_id to json file
-  fs.writeFileSync(`${dir}/Map.json`, JSON.stringify(matches));
+  Files.createFile(username, "SessionInfo.json", JSON.stringify(sessionInfo));
 
   // Genereate pub and priv keys for communication
   const [privateKey, publicKey] = Cryptography.generatePubPrivKeys(password);
 
   // Store keys
-  Files.createFile(one_time_id, "private.pem", privateKey);
-  Files.createFile(one_time_id, "public.pem", publicKey);
+  Files.createFile(username, "private.pem", privateKey);
+  Files.createFile(username, "public.pem", publicKey);
 
   console.log("Session Info Stored \n");
 };
 
 const login = (username, password) => {
-  // Reads username: one_time_id correspondences
-  const matches = fs.readFileSync("./data/Map.json", {
-    encoding: "utf8",
-  });
-
-  // Parse to JSON
-  const matchesJSON = JSON.parse(matches);
-
-  // Search for the entered username, to find the right data folder to decrypt data
-  const searchObj = matchesJSON.find((v) => v.username === username);
-
-  if (!searchObj) {
-    return {
-      success: false,
-      reason: "User does not have a session started in this client",
-    };
+  if (!Files.existsDir(username)) {
+    return { success: false, reason: "Invalid username" };
   }
 
-  const { one_time_id } = searchObj;
-
-  if (!Files.existsFile(one_time_id, "SessionInfo.json")) {
+  if (!inThisClient(username)) {
     return {
       success: false,
-      reason: "User does not have a session started in this client",
+      reason: "User doesn't have a session in this client",
     };
   }
 
   // Reads session info from file (plain text + encrypted data)
   const sessionFileData = fs.readFileSync(
-    `./data/${one_time_id}/SessionInfo.json`,
+    `./data/${username}/SessionInfo.json`,
     {
       encoding: "utf8",
     }
@@ -104,7 +70,7 @@ const login = (username, password) => {
   let sessionFileDataJSON = JSON.parse(sessionFileData);
 
   // Reads salt from file
-  const salt = fs.readFileSync(`./data/${one_time_id}/Salt`, {
+  const salt = fs.readFileSync(`./data/${username}/Salt`, {
     encoding: "utf8",
   });
 
@@ -127,8 +93,8 @@ const login = (username, password) => {
   return { success: true, sessionInfo: sessionFileDataJSON };
 };
 
-const inThisClient = (one_time_id) => {
-  return Files.existsFile(one_time_id, "SessionInfo.json");
+const inThisClient = (username) => {
+  return Files.existsFile(username, "SessionInfo.json");
 };
 
 const requestEnd = (token) => {

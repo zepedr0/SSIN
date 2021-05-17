@@ -3,8 +3,8 @@ const path = require("path");
 const fs = require("fs");
 
 // Encrypt message
-const encrypt = (toEncrypt, one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const encrypt = (toEncrypt, username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   const publicKey = fs.readFileSync(`${dir}/public.pem`, "utf8");
   const buffer = Buffer.from(toEncrypt, "utf8");
   const encrypted = crypto.publicEncrypt(publicKey.toString(), buffer);
@@ -12,8 +12,8 @@ const encrypt = (toEncrypt, one_time_id) => {
 };
 
 // Decrypt message
-const decrypt = (passphrase, toDecrypt, one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const decrypt = (passphrase, toDecrypt, username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   const privateKey = fs.readFileSync(`${dir}/private.pem`, "utf8");
   const buffer = Buffer.from(toDecrypt, "base64");
   const decrypted = crypto.privateDecrypt(
@@ -98,8 +98,8 @@ const localDecrypt = (toDecrypt, key) => {
   return decrypted.toString();
 };
 
-const getUserSalt = (one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const getUserSalt = (username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   const salt = fs.readFileSync(`${dir}/salt`, "utf8");
   return salt;
 }

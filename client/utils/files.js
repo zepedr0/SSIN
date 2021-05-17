@@ -1,30 +1,30 @@
 const path = require("path");
 const fs = require("fs");
 
-// All functions relative to user one-time-id folder
+// All functions relative to user username folder
 
-const createFile = (one_time_id, filename, content) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const createFile = (username, filename, content) => {
+  const dir = path.join(__dirname, "..", "data", username);
   fs.writeFileSync(`${dir}/${filename}`, content);
 };
 
-const createFolder = (one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const createFolder = (username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   fs.mkdirSync(dir);
 };
 
-const existsDir = (one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const existsDir = (username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   return fs.existsSync(dir);
 };
 
-const existsFile = (one_time_id, filename) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const existsFile = (username, filename) => {
+  const dir = path.join(__dirname, "..", "data", username);
   return fs.existsSync(`${dir}/${filename}`);
 };
 
-const deleteFile = (one_time_id, filename) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const deleteFile = (username, filename) => {
+  const dir = path.join(__dirname, "..", "data", username);
   fs.unlinkSync(`${dir}/${filename}`);
 };
 
