@@ -139,7 +139,7 @@ const consoleMenu = async (sessionInfo) => {
           const pass = await Authentication.askUserPassword(
             "Type your password to encrypt your message"
           );
-          const salt = sessionInfo.salt;
+          const salt = Cryptography.getUserSalt(sessionInfo.one_time_id);
           const k = Cryptography.generatePBKDF(pass, salt);
           const encMsg = Cryptography.localEncrypt(msg, k);
           const encSig = Cryptography.localEncrypt(sig, k);
@@ -155,10 +155,16 @@ const consoleMenu = async (sessionInfo) => {
         case "3)": {
           const sender_id = "111";
           const msgs = Messages.getMessages(sessionInfo.one_time_id, sender_id);
+          
+          if (msgs === null) {
+            console.log(`No messages from ${sender_id} user`)
+            break;
+          }
+          
           const pass = await Authentication.askUserPassword(
             "Type your password to decrypt your messages"
           );
-          const salt = sessionInfo.salt;
+          const salt = Cryptography.getUserSalt(sessionInfo.one_time_id);
           const k = Cryptography.generatePBKDF(pass, salt);
           msgs.forEach((msg, i) => {
             const decMsg = Cryptography.localDecrypt(msg.msg, k);
