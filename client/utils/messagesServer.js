@@ -26,8 +26,8 @@ const createMessageServer = async (username) => {
 
     // TODO: fazer um request ao server a pedir o CA
     const options = {
-        key: fs.readFileSync(path.join(__dirname, '..', 'data', username, 'keys', 'client-key.pem')),
-        cert: fs.readFileSync(path.join(__dirname, '..', 'data', username, 'keys', 'client-crt.pem')),
+        key: fs.readFileSync(path.join(__dirname, '..', 'data', username, 'keys', 'key.pem')),
+        cert: fs.readFileSync(path.join(__dirname, '..', 'data', username, 'keys', 'cert.pem')),
         ca: fs.readFileSync(path.join(__dirname, '..', 'data', 'CA', 'ca-crt.pem')),
         requestCert: true,
         rejectUnauthorized: true

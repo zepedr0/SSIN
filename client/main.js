@@ -54,7 +54,7 @@ const registerMenu = async () => {
     );
 
     // Starts Session
-    Session.saveSession(username, one_time_id, registerResult, password);
+    await Session.saveSession(username, one_time_id, registerResult, password);
   });
 };
 
@@ -165,7 +165,6 @@ const consoleMenu = async (sessionInfo) => {
       } else if (answer.option === "4) Send Message") {
         const username = sessionInfo.user_private_info.username
         const token = sessionInfo.user_private_info.sessionToken
-        // TODO: mudar para chatMenu
         await chatMenu(username, token)
         await consoleMenu(sessionInfo)
       }

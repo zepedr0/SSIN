@@ -31,30 +31,19 @@ const getMessages = (recipient_one_time_id, sender_one_time_id) => {
 
 // send message
 const sendMessage = async (username, msg, receiverPort) => {
-  // TODO: alterar path, está hardcoded
-  // const encPrivKey = fs.readFileSync(path.join(__dirname, '..', 'data', '45a78b4f3456', 'private.pem'))
-  // const privKey = crypto.createPrivateKey({
-  //   key: encPrivKey,
-  //   format: 'pem',
-  //   type: 'pkcs8',
-  //   cipher: 'aes-256-cbc',
-  //   passphrase: 'amogus'
-  // })
   try {
     const keysDir = path.join(__dirname, '..', 'data', username, 'keys')
     // TODO: guardar a priv key encriptada, criar o csr no node e pedir ao server o certificate
-    const privKey = fs.readFileSync(path.join(keysDir, 'client-key.pem'))
+    const privKey = fs.readFileSync(path.join(keysDir, 'key.pem'))
     const sig = sign(privKey, msg)
     const httpsAgent = new https.Agent({
       key: privKey,
-      cert: fs.readFileSync(path.join(keysDir, 'client-crt.pem')),
+      cert: fs.readFileSync(path.join(keysDir, 'cert.pem')),
       ca: fs.readFileSync(path.join(__dirname, '..', 'data', 'CA', 'ca-crt.pem')),
       rejectUnauthorized: false
     })
     axios
       .post(`https://0.0.0.0:${receiverPort}/`, {
-        // // TODO: alterar, está hardcoded
-        // username: 'usefname',
         msg: msg,
         sig: sig
       },
@@ -62,6 +51,7 @@ const sendMessage = async (username, msg, receiverPort) => {
         httpsAgent
       })
       .then((response) => {
+        // TODO: alterar isto
         console.log("enviou")
         // TODO: caso seja para guardar as mensagens enviadas temos que ver se este post retorna 201
       })

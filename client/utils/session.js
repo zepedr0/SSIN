@@ -3,9 +3,44 @@ const Files = require("./files");
 
 const fs = require("fs");
 const crypto = require("crypto");
+const { pki } = require('node-forge')
+const axios = require('axios')
+
+// Request certificate from server
+const postCertificateRequest = async (token, csrPem) => {
+  return axios
+        .post(`${process.env.API_URL}/users/certificate-requests`, {
+            csr: csrPem
+        },
+        {
+            headers: {
+                token: `${token}`,
+            }
+        })
+        .then((response) => {
+            return response.data.cert
+        })
+        .catch((error) => {
+            console.log(error)
+            return null
+        })
+}
+
+const createCSR = (username, publicKeyPem, privateKeyPem) => {
+  const csr = pki.createCertificationRequest()
+  csr.publicKey = pki.publicKeyFromPem(publicKeyPem)
+  csr.setSubject([
+    {
+      name: 'commonName',
+      value: username
+    }
+  ])
+  csr.sign(pki.privateKeyFromPem(privateKeyPem))
+  return pki.certificationRequestToPem(csr)
+}
 
 // Store new session
-const saveSession = (username, one_time_id, decToken, password) => {
+const saveSession = async (username, one_time_id, decToken, password) => {
   const salt = crypto.randomBytes(32);
   const key = Cryptography.generatePBKDF(password, salt);
 
@@ -24,12 +59,24 @@ const saveSession = (username, one_time_id, decToken, password) => {
   fs.writeFileSync("./data/Session.json", JSON.stringify(sessionInfo));
 
   // Create user directory
-  Files.createFolder(one_time_id);
+  const keysFolder = [username, 'keys']
+  Files.createFolder(keysFolder);
   // Genereate pub and priv keys for communication
-  const [privateKey, publicKey] = Cryptography.generatePubPrivKeys(password);
+  const [privateKeyEncPem, publicKeyPem] = Cryptography.generatePubPrivKeys(password);
+  const privateKeyPem = crypto.createPrivateKey({
+    key: privateKeyEncPem,
+    format: 'pem',
+    // TODO: passphrase está hardcoded
+    passphrase: 'amogus'
+  }).export({ format: 'pem', type: 'pkcs8' })
+
+  const csrPem = createCSR(username, publicKeyPem, privateKeyPem)
+  const certPem = await postCertificateRequest(decToken, csrPem)
+  
   // Store keys
-  Files.createFile(one_time_id, 'private.pem', privateKey);
-  Files.createFile(one_time_id, 'public.pem', publicKey);
+  // TODO: guardar private key encriptada em vez de plaintext
+  Files.createFile(keysFolder, 'key.pem', privateKeyPem);
+  Files.createFile(keysFolder, 'cert.pem', certPem)
 
   console.log("Session Info Stored \n");
 };
