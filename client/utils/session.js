@@ -9,7 +9,7 @@ const axios = require('axios')
 // Request certificate from server
 const postCertificateRequest = async (token, csrPem) => {
   return axios
-        .post(`${process.env.API_URL}/users/certificate-requests`, {
+        .post('/users/certificate-requests', {
             csr: csrPem
         },
         {
@@ -139,7 +139,7 @@ const inThisClient = (username) => {
 const requestEnd = (token) => {
   // Logout
   return axios
-    .post(`${process.env.API_URL}/users/logout`, null, {
+    .post('/users/logout', null, {
       headers: { token },
     })
     .then((answer) => {

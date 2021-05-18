@@ -41,7 +41,6 @@ const createMessageServer = async (sessionInfo) => {
     // if PORT is not specified in the env variables, it will be set to 0 (operating system will assign an arbitrary unused port)
     const port = process.env.PORT === undefined ? 0 : process.env.PORT
 
-    // TODO: fazer um request ao server a pedir o CA
     const privKey = Cryptography.privKeyEncPemtoPem(fs.readFileSync(path.join(__dirname, '..', 'data', sessionInfo.username, 'keys', 'key.pem')), sessionInfo.user_private_info.key)
     const options = {
         key: privKey,

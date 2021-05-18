@@ -1,7 +1,13 @@
+const { default: axios } = require("axios");
 const express = require("express");
 const mainLoop = require("./main");
+const https = require('https')
 
 require('dotenv').config()
+
+// Global axios defaults
+axios.defaults.baseURL = process.env.API_URL
+axios.defaults.httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
 // const app = express();
 // const port = 3001;

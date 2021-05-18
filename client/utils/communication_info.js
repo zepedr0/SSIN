@@ -2,7 +2,7 @@ const axios = require("axios")
 
 const getUsersCommunicationInfo = async (token) => {
     return axios
-        .get(`${process.env.API_URL}/users/communication-info`, {
+        .get('/users/communication-info', {
             headers: {
                 token: `${token}`,
             },
@@ -18,7 +18,7 @@ const getUsersCommunicationInfo = async (token) => {
 
 const postPort = async (port, token) => {
     return axios
-        .post(`${process.env.API_URL}/users/communication-info`, {
+        .post('/users/communication-info', {
             port
         },
         {
@@ -30,7 +30,7 @@ const postPort = async (port, token) => {
             return response
         })
         .catch((error) => {
-            console.log('Error: ', error.response.data.error)
+            console.log(error)
             return null
         })
 }

@@ -33,7 +33,7 @@ const askUserPassword = async (message) => {
 const requestRegister = (username, one_time_id) => {
   // Register
   return axios
-    .post(`${process.env.API_URL}/users/register`, { username, one_time_id })
+    .post('/users/register', { username, one_time_id })
     .then((answer) => {
       return answer.data.token;
     })
