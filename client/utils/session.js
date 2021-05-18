@@ -145,7 +145,7 @@ const inThisClient = (username) => {
 const requestEnd = (token) => {
   // Logout
   return axios
-    .post(`${api}users/logout`, null, {
+    .post(`${process.env.API_URL}/users/logout`, null, {
       headers: { token },
     })
     .then((answer) => {

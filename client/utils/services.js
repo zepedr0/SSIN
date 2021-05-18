@@ -1,8 +1,6 @@
 const axios = require("axios");
 const inquirer = require("inquirer");
 
-const api = "http://localhost:3000/api/";
-
 const askUserValue = async () => {
   const value_question = [
     {
@@ -75,7 +73,7 @@ const rootCalc = async (token) => {
 // Calculate Square or Cubic Root
 function squareCubicRoot(option, value, token) {
   axios
-    .get(`${api}services/${option}/${value}`, {
+    .get(`${process.env.API_URL}/services/${option}/${value}`, {
       headers: {
         token: `${token}`,
       },
@@ -105,7 +103,7 @@ function paramRoot(value, token) {
   ];
   inquirer.prompt(root_question).then((answer) => {
     axios
-      .get(`${api}services/3/${value}/${answer.root}`, {
+      .get(`${process.env.API_URL}/services/3/${value}/${answer.root}`, {
         headers: {
           token: `${token}`,
         },
