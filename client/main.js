@@ -204,9 +204,8 @@ const consoleMenu = async (sessionInfo) => {
         message: "What do you want to do?\n",
         choices: [
           "1) Calculate a root",
-          "2) Store message",
-          "3) See messages",
-          "4) Send Message",
+          "2) See messages",
+          "3) Send Message",
           "8) Quit",
           "9) End this client's session on your account",
         ],
@@ -222,31 +221,11 @@ const consoleMenu = async (sessionInfo) => {
           break;
         }
         case "2)": {
-          const sender_id = "111";
-          const msg = "111 msg";
-          const sig = "111 sig";
-          const pass = await Authentication.askUserPassword(
-            "Type your password to encrypt your message"
-          );
-          const salt = Cryptography.getUserSalt(sessionInfo.username);
-          const k = Cryptography.generatePBKDF(pass, salt);
-          const encMsg = Cryptography.localEncrypt(msg, k);
-          const encSig = Cryptography.localEncrypt(sig, k);
-          Messages.storeMessage(
-            sessionInfo.username,
-            sender_id,
-            encMsg,
-            encSig
-          );
-
-          break;
-        }
-        case "3)": {
           await seeMessagesMenu(sessionInfo);
 
           break;
         }
-        case "4)": {
+        case "3)": {
           await chatMenu(sessionInfo);
 
           break;
