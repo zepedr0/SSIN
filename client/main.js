@@ -1,14 +1,14 @@
 const inquirer = require("inquirer");
-const fs = require('fs')
-const path = require('path')
+const fs = require("fs");
+const path = require("path");
 
 const Authentication = require("./utils/authentication");
 const Cryptography = require("./utils/cryptography");
 const Messages = require("./utils/messages");
 const Services = require("./utils/services");
 const Session = require("./utils/session");
-const MessagesServer = require('./utils/messagesServer')
-const Chat = require('./utils/chat');
+const MessagesServer = require("./utils/messagesServer");
+const Chat = require("./utils/chat");
 const CommunicationInfo = require("./utils/communication_info");
 const Files = require("./utils/files");
 
@@ -99,7 +99,7 @@ const loginMenu = async () => {
     if (loginAnswer && !loginAnswer.success) {
       console.log(`Login failed. Reason: ${loginAnswer.reason}`);
     }
-    
+
     if (loginAnswer.success === false) {
       if (loginAnswer.reason === "Wrong Password") {
         nFailedLogins++;
@@ -119,21 +119,31 @@ const loginMenu = async () => {
 };
 
 const chatMenu = async (sessionInfo) => {
-  const usersInfo = await CommunicationInfo.getUsersCommunicationInfo(sessionInfo.user_private_info.sessionToken)
+  const usersInfo = await CommunicationInfo.getUsersCommunicationInfo(
+    sessionInfo.user_private_info.sessionToken
+  );
   const inquirerChoices = usersInfo.map((user, index) => {
-    let last_seen = 'Never'
+    let last_seen = "Never";
     if (user.last_seen !== undefined) {
       options = {
-        dateStyle: 'short',
-        timeStyle: 'medium'
-      }
-      
-      last_seen = Intl.DateTimeFormat('pt-PT', options).format(new Date(user.last_seen))
+        dateStyle: "short",
+        timeStyle: "medium",
+      };
+
+      last_seen = Intl.DateTimeFormat("pt-PT", options).format(
+        new Date(user.last_seen)
+      );
     }
-    return { name: `${index+1}) ${user.full_name} (Last Seen: ${last_seen})`, value: index }
-  })
-  inquirerChoices.push({ name: `${usersInfo.length+1}) Back`, value: usersInfo.length })
-  
+    return {
+      name: `${index + 1}) ${user.full_name} (Last Seen: ${last_seen})`,
+      value: index,
+    };
+  });
+  inquirerChoices.push({
+    name: `${usersInfo.length + 1}) Back`,
+    value: usersInfo.length,
+  });
+
   await inquirer
     .prompt([
       {
@@ -145,21 +155,28 @@ const chatMenu = async (sessionInfo) => {
     ])
     .then(async (answer) => {
       if (answer.option >= 0 && answer.option < usersInfo.length) {
-        await Chat.chat(sessionInfo, usersInfo[answer.option].port)
-        await chatMenu(sessionInfo)
+        await Chat.chat(sessionInfo, usersInfo[answer.option].port);
+        await chatMenu(sessionInfo);
       }
     });
-}
+};
 
 const seeMessagesMenu = async (sessionInfo) => {
-  let usernames = []
-  if (Files.existsDir([sessionInfo.username, 'messages'])) {
-    usernames = fs.readdirSync(path.join(__dirname, 'data', sessionInfo.username, 'messages')).map(filename => path.basename(filename, '.json'))
+  let usernames = [];
+  if (Files.existsDir([sessionInfo.username, "messages"])) {
+    usernames = fs
+      .readdirSync(
+        path.join(__dirname, "data", sessionInfo.username, "messages")
+      )
+      .map((filename) => path.basename(filename, ".json"));
   }
   const inquirerChoices = usernames.map((username, index) => {
-    return { name: `${index+1}) ${username}`, value: index }
-  })
-  inquirerChoices.push({ name: `${usernames.length+1}) Back`, value: usernames.length })
+    return { name: `${index + 1}) ${username}`, value: index };
+  });
+  inquirerChoices.push({
+    name: `${usernames.length + 1}) Back`,
+    value: usernames.length,
+  });
 
   await inquirer
     .prompt([
@@ -172,11 +189,11 @@ const seeMessagesMenu = async (sessionInfo) => {
     ])
     .then(async (answer) => {
       if (answer.option >= 0 && answer.option < usernames.length) {
-        Messages.seeMessages(sessionInfo, usernames[answer.option])
-        await seeMessagesMenu(sessionInfo)
+        Messages.seeMessages(sessionInfo, usernames[answer.option]);
+        await seeMessagesMenu(sessionInfo);
       }
     });
-}
+};
 
 const consoleMenu = async (sessionInfo) => {
   await inquirer
@@ -225,14 +242,14 @@ const consoleMenu = async (sessionInfo) => {
           break;
         }
         case "3)": {
-          await seeMessagesMenu(sessionInfo)
+          await seeMessagesMenu(sessionInfo);
 
           break;
         }
         case "4)": {
-            await chatMenu(sessionInfo)
+          await chatMenu(sessionInfo);
 
-            break
+          break;
         }
         case "9)": {
           const token = sessionInfo.user_private_info.sessionToken;
@@ -245,7 +262,7 @@ const consoleMenu = async (sessionInfo) => {
             Files.deleteFile([sessionInfo.username], "SessionInfo.json");
           }
 
-          break;
+          process.exit();
         }
         default: {
           process.exit();
@@ -253,7 +270,7 @@ const consoleMenu = async (sessionInfo) => {
       }
     });
 
-    await consoleMenu(sessionInfo)
+  await consoleMenu(sessionInfo);
 };
 
 const mainLoop = async () => {
@@ -274,13 +291,7 @@ const mainLoop = async () => {
           process.exit();
         }
 
-        const sessionInfo = await loginMenu();
-
-        if (!sessionInfo) {
-          process.exit();
-        }
-
-        await consoleMenu(sessionInfo);
+        await mainLoop();
       } else if (answer.option == "2) Login") {
         const sessionInfo = await loginMenu();
 
@@ -289,10 +300,12 @@ const mainLoop = async () => {
         }
 
         // TODO: quando o user der logout fechar o server, createMessageServer retorna a instancia do server, fazer server.close()
-        MessagesServer.createMessageServer(sessionInfo)
-          .then(server => {
-            CommunicationInfo.postPort(server.address().port, sessionInfo.user_private_info.sessionToken)
-          })
+        MessagesServer.createMessageServer(sessionInfo).then((server) => {
+          CommunicationInfo.postPort(
+            server.address().port,
+            sessionInfo.user_private_info.sessionToken
+          );
+        });
 
         await consoleMenu(sessionInfo);
       } else process.exit();

@@ -8,7 +8,9 @@
       "username": "username"
     },
     "clearance_level": 3,
-    "has_client_session": true
+    "has_client_session": false,
+    "last_seen": 1621372684670,
+    "port": 41937
   },
   {
     "identity": {
@@ -19,7 +21,9 @@
       "username": "usefname"
     },
     "clearance_level": 1,
-    "has_client_session": false
+    "has_client_session": false,
+    "last_seen": 1621372175574,
+    "port": 34995
   },
   {
     "identity": {
@@ -30,7 +34,7 @@
       "username": "luigi"
     },
     "clearance_level": 2,
-    "has_client_session": true
+    "has_client_session": false
   },
   {
     "identity": {
@@ -41,6 +45,6 @@
       "username": "mario"
     },
     "clearance_level": 2,
-    "has_client_session": true
+    "has_client_session": false
   }
 ]
