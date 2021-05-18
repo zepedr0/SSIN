@@ -44,23 +44,23 @@ const rootCalc = async (token) => {
     },
   ];
 
-  inquirer.prompt(service_questions).then(async (answers) => {
+  await inquirer.prompt(service_questions).then(async (answers) => {
     const answerNumber = answers.option.split(" ")[0];
 
     switch (answerNumber) {
       case "1)": {
         const value = await askUserValue();
-        squareCubicRoot(1, value, token);
+        await squareCubicRoot(1, value, token);
         break;
       }
       case "2)": {
         const value = await askUserValue();
-        squareCubicRoot(2, value, token);
+        await squareCubicRoot(2, value, token);
         break;
       }
       case "3)": {
         const value = await askUserValue();
-        paramRoot(value, token);
+        await paramRoot(value, token);
         break;
       }
       default: {
@@ -71,8 +71,8 @@ const rootCalc = async (token) => {
 };
 
 // Calculate Square or Cubic Root
-function squareCubicRoot(option, value, token) {
-  axios
+async function squareCubicRoot(option, value, token) {
+  await axios
     .get(`/services/${option}/${value}`, {
       headers: {
         token: `${token}`,
@@ -87,7 +87,7 @@ function squareCubicRoot(option, value, token) {
 }
 
 // Calculate Parameterized N Root
-function paramRoot(value, token) {
+async function paramRoot(value, token) {
   const root_question = [
     {
       type: "number",
@@ -101,8 +101,8 @@ function paramRoot(value, token) {
       },
     },
   ];
-  inquirer.prompt(root_question).then((answer) => {
-    axios
+  await inquirer.prompt(root_question).then(async (answer) => {
+    await axios
       .get(`/services/3/${value}/${answer.root}`, {
         headers: {
           token: `${token}`,
