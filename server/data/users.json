@@ -7,7 +7,8 @@
       "one_time_id": "45a78b4f3456",
       "username": "username"
     },
-    "clearance_level": 3
+    "clearance_level": 3,
+    "has_client_session": true
   },
   {
     "identity": {
@@ -17,7 +18,8 @@
       "one_time_id": "45a78c4f3456",
       "username": "usefname"
     },
-    "clearance_level": 1
+    "clearance_level": 1,
+    "has_client_session": false
   },
   {
     "identity": {
@@ -27,7 +29,8 @@
       "one_time_id": "23axg1j5a756",
       "username": "luigi"
     },
-    "clearance_level": 2
+    "clearance_level": 2,
+    "has_client_session": true
   },
   {
     "identity": {
@@ -37,6 +40,7 @@
       "one_time_id": "ng71ndsAn13b",
       "username": "mario"
     },
-    "clearance_level": 2
+    "clearance_level": 2,
+    "has_client_session": true
   }
 ]

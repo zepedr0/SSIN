@@ -40,23 +40,34 @@ const createCSR = (username, publicKeyPem, privateKeyPem) => {
 }
 
 // Store new session
-const saveSession = async (username, one_time_id, decToken, password) => {
+const saveSession = async (username, decToken, password) => {
+  // Create user directory
+  const usernameFolder = [username]
+  if (!Files.existsDir(usernameFolder)) {
+    Files.createFolder(usernameFolder);
+  }
+  
   const salt = crypto.randomBytes(32);
+
+  // Store Salt
+  Files.createFile(usernameFolder, "Salt", salt.toString("hex"));
+
+  // Generate Key
   const key = Cryptography.generatePBKDF(password, salt);
 
+  // Encrypt private info with key
   const encUserPrivateInfo = Cryptography.localEncrypt(
-    JSON.stringify({ username, sessionToken: decToken }),
+    JSON.stringify({ sessionToken: decToken }),
     key
   );
 
   const sessionInfo = {
-    one_time_id,
-    salt: salt.toString("hex"),
+    username,
     user_private_info: encUserPrivateInfo,
   };
 
   // Writes encrypted session info to a file
-  fs.writeFileSync("./data/Session.json", JSON.stringify(sessionInfo));
+  Files.createFile(usernameFolder, "SessionInfo.json", JSON.stringify(sessionInfo));
 
   // Create user directory
   const keysFolder = [username, 'keys']
@@ -81,41 +92,75 @@ const saveSession = async (username, one_time_id, decToken, password) => {
   console.log("Session Info Stored \n");
 };
 
-const login = (password) => {
-  // Reads encypted session token from file
-  const sessionFileData = fs.readFileSync("./data/Session.json", {
+const login = (username, password) => {
+  if (!Files.existsDir([username])) {
+    return { success: false, reason: "Invalid username" };
+  }
+
+  if (!inThisClient(username)) {
+    return {
+      success: false,
+      reason: "User doesn't have a session in this client",
+    };
+  }
+
+  // Reads session info from file (plain text + encrypted data)
+  const sessionFileData = fs.readFileSync(
+    `./data/${username}/SessionInfo.json`,
+    {
+      encoding: "utf8",
+    }
+  );
+  // Parse to JSON
+  let sessionFileDataJSON = JSON.parse(sessionFileData);
+
+  // Reads salt from file
+  const salt = fs.readFileSync(`./data/${username}/Salt`, {
     encoding: "utf8",
   });
 
-  let sessionFileDataJSON = JSON.parse(sessionFileData);
-  const { one_time_id, salt } = sessionFileDataJSON;
-
+  // Generates key with entered password and salt
   const key = Cryptography.generatePBKDF(password, Buffer.from(salt, "hex"));
 
-  let userInfo;
-  try {
-    userInfo = Cryptography.localDecrypt(
-      sessionFileDataJSON.user_private_info,
-      key
-    );
-  } catch (err) {
-    // console.log(err);
-    if (err.code === "ERR_OSSL_EVP_BAD_DECRYPT") {
-      console.log("Wrong Password");
-      return { success: false, reason: "Wrong Password" };
-    } else {
-      return { success: false, reason: "Unknown" };
-    }
+  // Decrypt session token
+  const userInfo = Cryptography.localDecrypt(
+    sessionFileDataJSON.user_private_info,
+    key
+  );
+
+  if (userInfo === "## INVALID DECRYPT ##") {
+    console.log("Wrong Password");
+    return { success: false, reason: "Wrong Password" };
   }
 
+  // Return the session object, but the encrypted section is now decrypted
   sessionFileDataJSON.user_private_info = JSON.parse(userInfo);
   return { success: true, sessionInfo: sessionFileDataJSON };
 };
 
-const logout = () => {};
+const inThisClient = (username) => {
+  return Files.existsFile([username], "SessionInfo.json");
+};
+
+const requestEnd = (token) => {
+  // Logout
+  return axios
+    .post(`${api}users/logout`, null, {
+      headers: { token },
+    })
+    .then((answer) => {
+      return answer.data.success;
+    })
+    .catch((error) => {
+      console.log("Logout Request Failed");
+      console.log(error);
+      return false;
+    });
+};
 
 module.exports = {
   saveSession,
   login,
-  logout,
+  inThisClient,
+  requestEnd,
 };

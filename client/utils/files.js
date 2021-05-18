@@ -21,8 +21,20 @@ const existsFile = (folder, filename) => {
   return fs.existsSync(`${dir}/${filename}`);
 };
 
+const existsDir = (folder) => {
+  const dir = path.join(dataDir, ...folder);
+  return fs.existsSync(dir);
+};
+
+const deleteFile = (folder, filename) => {
+  const dir = path.join(dataDir, ...folder);
+  fs.unlinkSync(`${dir}/${filename}`);
+};
+
 module.exports = {
   createFile,
   createFolder,
   existsFile,
+  deleteFile,
+  existsDir,
 };

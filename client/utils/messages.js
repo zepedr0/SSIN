@@ -6,9 +6,9 @@ const { sign } = require('./cryptography')
 const https = require('https')
 
 // Stores a message sent by a sender
-const storeMessage = (recipient_one_time_id, sender_one_time_id, msg, signature) => {
+const storeMessage = (recipient_username, sender_username, msg, signature) => {
   
-  const filepath = path.join(__dirname, "..", "data", recipient_one_time_id, `${sender_one_time_id}.json`);
+  const filepath = path.join(__dirname, "..", "data", recipient_username, `${sender_username}.json`);
   let msgs = [];
 
   // Check if file exists and load msgs;
@@ -16,12 +16,12 @@ const storeMessage = (recipient_one_time_id, sender_one_time_id, msg, signature)
 
   msgs.push({ msg, signature });
 
-  Files.createFile(recipient_one_time_id, `${sender_one_time_id}.json`, JSON.stringify(msgs));
+  Files.createFile([recipient_username, 'messages'], `${sender_username}.json`, JSON.stringify(msgs));
 };
 
 // Returns all messages sent by a sender
-const getMessages = (recipient_one_time_id, sender_one_time_id) => {
-  const filepath = path.join(__dirname, "..", "data", recipient_one_time_id, `${sender_one_time_id}.json`);
+const getMessages = (recipient_username, sender_username) => {
+  const filepath = path.join(__dirname, "..", "data", recipient_username, `${sender_username}.json`);
 
   if (!fs.existsSync(filepath)) return null;
 
