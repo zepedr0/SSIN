@@ -2,7 +2,7 @@ const util = require('util');
 const readline = require('readline')
 const Messages = require('./messages')
 
-const chat = async (username, receiverPort) => {
+const chat = async (sessionInfo, receiverPort) => {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
@@ -16,7 +16,7 @@ const chat = async (username, receiverPort) => {
         if (message === exitCode) {
             return
         }
-        Messages.sendMessage(username, message, receiverPort)
+        Messages.sendMessage(sessionInfo, message, receiverPort)
         await recursiveReadLine()
     }
 

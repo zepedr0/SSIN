@@ -118,8 +118,8 @@ const loginMenu = async () => {
   return loginAnswer.sessionInfo;
 };
 
-const chatMenu = async (username, token) => {
-  const usersInfo = await CommunicationInfo.getUsersCommunicationInfo(token)
+const chatMenu = async (sessionInfo) => {
+  const usersInfo = await CommunicationInfo.getUsersCommunicationInfo(sessionInfo.user_private_info.sessionToken)
   const inquirerChoices = usersInfo.map((user, index) => {
     let last_seen = 'Never'
     if (user.last_seen !== undefined) {
@@ -145,14 +145,17 @@ const chatMenu = async (username, token) => {
     ])
     .then(async (answer) => {
       if (answer.option >= 0 && answer.option < usersInfo.length) {
-        await Chat.chat(username, usersInfo[answer.option].port)
-        await chatMenu(username, token)
+        await Chat.chat(sessionInfo, usersInfo[answer.option].port)
+        await chatMenu(sessionInfo)
       }
     });
 }
 
 const seeMessagesMenu = async (sessionInfo) => {
-  const usernames = fs.readdirSync(path.join(__dirname, 'data', sessionInfo.username, 'messages')).map(filename => path.basename(filename, '.json'))
+  let usernames = []
+  if (Files.existsDir([sessionInfo.username, 'messages'])) {
+    usernames = fs.readdirSync(path.join(__dirname, 'data', sessionInfo.username, 'messages')).map(filename => path.basename(filename, '.json'))
+  }
   const inquirerChoices = usernames.map((username, index) => {
     return { name: `${index+1}) ${username}`, value: index }
   })
@@ -227,9 +230,7 @@ const consoleMenu = async (sessionInfo) => {
           break;
         }
         case "4)": {
-            const username = sessionInfo.username
-            const token = sessionInfo.user_private_info.sessionToken
-            await chatMenu(username, token)
+            await chatMenu(sessionInfo)
 
             break
         }

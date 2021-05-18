@@ -42,8 +42,9 @@ const createMessageServer = async (sessionInfo) => {
     const port = process.env.PORT === undefined ? 0 : process.env.PORT
 
     // TODO: fazer um request ao server a pedir o CA
+    const privKey = Cryptography.privKeyEncPemtoPem(fs.readFileSync(path.join(__dirname, '..', 'data', sessionInfo.username, 'keys', 'key.pem')), sessionInfo.user_private_info.key)
     const options = {
-        key: fs.readFileSync(path.join(__dirname, '..', 'data', sessionInfo.username, 'keys', 'key.pem')),
+        key: privKey,
         cert: fs.readFileSync(path.join(__dirname, '..', 'data', sessionInfo.username, 'keys', 'cert.pem')),
         ca: fs.readFileSync(path.join(__dirname, '..', 'data', 'CA', 'ca-crt.pem')),
         requestCert: true,

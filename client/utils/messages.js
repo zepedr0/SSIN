@@ -31,11 +31,11 @@ const getMessages = (recipient_username, sender_username) => {
 };
 
 // send message
-const sendMessage = async (username, msg, receiverPort) => {
+const sendMessage = async (sessionInfo, msg, receiverPort) => {
   try {
-    const keysDir = path.join(__dirname, '..', 'data', username, 'keys')
+    const keysDir = path.join(__dirname, '..', 'data', sessionInfo.username, 'keys')
     // TODO: guardar a priv key encriptada, criar o csr no node e pedir ao server o certificate
-    const privKey = fs.readFileSync(path.join(keysDir, 'key.pem'))
+    const privKey = Cryptography.privKeyEncPemtoPem(fs.readFileSync(path.join(keysDir, 'key.pem')), sessionInfo.user_private_info.key)
     const sig = Cryptography.sign(privKey, msg)
     const httpsAgent = new https.Agent({
       key: privKey,

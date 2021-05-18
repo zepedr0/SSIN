@@ -104,6 +104,14 @@ const getUserSalt = (username) => {
   return salt;
 }
 
+const privKeyEncPemtoPem = (privKeyEncPem, passphrase) => {
+  return crypto.createPrivateKey({
+    key: privKeyEncPem,
+    format: 'pem',
+    passphrase: Buffer.from(passphrase)
+  }).export({ format: 'pem', type: 'pkcs8' })
+}
+
 module.exports = {
   encrypt,
   decrypt,
@@ -114,4 +122,5 @@ module.exports = {
   localEncrypt,
   localDecrypt,
   getUserSalt,
+  privKeyEncPemtoPem
 };

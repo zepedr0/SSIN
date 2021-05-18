@@ -74,18 +74,13 @@ const saveSession = async (username, decToken, password) => {
   Files.createFolder(keysFolder);
   // Genereate pub and priv keys for communication
   const [privateKeyEncPem, publicKeyPem] = Cryptography.generatePubPrivKeys(key);
-  const privateKeyPem = crypto.createPrivateKey({
-    key: privateKeyEncPem,
-    format: 'pem',
-    passphrase: key
-  }).export({ format: 'pem', type: 'pkcs8' })
+  const privateKeyPem = Cryptography.privKeyEncPemtoPem(privateKeyEncPem, key)
 
   const csrPem = createCSR(username, publicKeyPem, privateKeyPem)
   const certPem = await postCertificateRequest(decToken, csrPem)
   
   // Store keys
-  // TODO: guardar private key encriptada em vez de plaintext
-  Files.createFile(keysFolder, 'key.pem', privateKeyPem);
+  Files.createFile(keysFolder, 'key.pem', privateKeyEncPem);
   Files.createFile(keysFolder, 'cert.pem', certPem)
 
   console.log("Session Info Stored \n");
