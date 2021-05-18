@@ -6,6 +6,7 @@ const dataDir = path.join(__dirname, "..", "data")
 
 const createFile = (folder, filename, content) => {
   const dir = path.join(dataDir, ...folder);
+  createFolder(folder)
   fs.writeFileSync(`${dir}/${filename}`, content);
 };
 

@@ -278,7 +278,7 @@ const mainLoop = async () => {
         }
 
         // TODO: quando o user der logout fechar o server, createMessageServer retorna a instancia do server, fazer server.close()
-        MessagesServer.createMessageServer(sessionInfo.username)
+        MessagesServer.createMessageServer(sessionInfo)
           .then(server => {
             CommunicationInfo.postPort(server.address().port, sessionInfo.user_private_info.sessionToken)
           })

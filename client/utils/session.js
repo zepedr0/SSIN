@@ -57,7 +57,7 @@ const saveSession = async (username, decToken, password) => {
 
   // Encrypt private info with key
   const encUserPrivateInfo = Cryptography.localEncrypt(
-    JSON.stringify({ sessionToken: decToken }),
+    JSON.stringify({ sessionToken: decToken, key: key }),
     key
   );
 
@@ -73,12 +73,11 @@ const saveSession = async (username, decToken, password) => {
   const keysFolder = [username, 'keys']
   Files.createFolder(keysFolder);
   // Genereate pub and priv keys for communication
-  const [privateKeyEncPem, publicKeyPem] = Cryptography.generatePubPrivKeys(password);
+  const [privateKeyEncPem, publicKeyPem] = Cryptography.generatePubPrivKeys(key);
   const privateKeyPem = crypto.createPrivateKey({
     key: privateKeyEncPem,
     format: 'pem',
-    // TODO: passphrase está hardcoded
-    passphrase: 'amogus'
+    passphrase: key
   }).export({ format: 'pem', type: 'pkcs8' })
 
   const csrPem = createCSR(username, publicKeyPem, privateKeyPem)

@@ -3,21 +3,38 @@ const https = require('https')
 const fs = require('fs')
 const path = require('path')
 const app = express()
-const { checkSign } = require('./cryptography')
 const crypto = require('crypto')
+
+const { checkSign } = require('./cryptography')
+const Messages = require('./messages')
+const Cryptography = require('./cryptography')
+
+let sessionInfo;
 
 const processMessage = async (req, res) => {
     const { msg, sig } = req.body
     const peerCertificate = req.socket.getPeerCertificate()
-    console.log('Sender: ', peerCertificate.subject.CN)
-    console.log('Verify message signature: ', checkSign(crypto.createPublicKey({key: peerCertificate.pubkey, format: 'der', type: 'spki'}), msg, sig))
 
-    // TODO: caso a message signature esteja correta, guardar mensagem localstorage, conforme o username
+    if (!checkSign(crypto.createPublicKey({key: peerCertificate.pubkey, format: 'der', type: 'spki'}), msg, sig)) {
+        res.status(403).send({ message: 'Digital signature is not valid' })
+    }
 
-    res.status(200).send()
+    const encMsg = Cryptography.localEncrypt(msg, this.sessionInfo.user_private_info.key);
+    const encSig = Cryptography.localEncrypt(sig, this.sessionInfo.user_private_info.key);
+    Messages.storeMessage(
+      this.sessionInfo.username,
+      peerCertificate.subject.CN,
+      encMsg,
+      encSig
+    );
+
+    res.status(201).send()
 }
 
-const createMessageServer = async (username) => {
+const createMessageServer = async (sessionInfo) => {
+    
+    this.sessionInfo = sessionInfo
+
     app.use(express.json())
     app.use(express.urlencoded({ extended: true }))
 
@@ -26,8 +43,8 @@ const createMessageServer = async (username) => {
 
     // TODO: fazer um request ao server a pedir o CA
     const options = {
-        key: fs.readFileSync(path.join(__dirname, '..', 'data', username, 'keys', 'key.pem')),
-        cert: fs.readFileSync(path.join(__dirname, '..', 'data', username, 'keys', 'cert.pem')),
+        key: fs.readFileSync(path.join(__dirname, '..', 'data', sessionInfo.username, 'keys', 'key.pem')),
+        cert: fs.readFileSync(path.join(__dirname, '..', 'data', sessionInfo.username, 'keys', 'cert.pem')),
         ca: fs.readFileSync(path.join(__dirname, '..', 'data', 'CA', 'ca-crt.pem')),
         requestCert: true,
         rejectUnauthorized: true
