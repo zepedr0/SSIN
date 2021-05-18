@@ -1,4 +1,6 @@
 const inquirer = require("inquirer");
+const fs = require('fs')
+const path = require('path')
 
 const Authentication = require("./utils/authentication");
 const Cryptography = require("./utils/cryptography");
@@ -149,6 +151,30 @@ const chatMenu = async (username, token) => {
     });
 }
 
+const seeMessagesMenu = async (sessionInfo) => {
+  const usernames = fs.readdirSync(path.join(__dirname, 'data', sessionInfo.username, 'messages')).map(filename => path.basename(filename, '.json'))
+  const inquirerChoices = usernames.map((username, index) => {
+    return { name: `${index+1}) ${username}`, value: index }
+  })
+  inquirerChoices.push({ name: `${usernames.length+1}) Back`, value: usernames.length })
+
+  await inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "option",
+        message: "Select username?\n",
+        choices: inquirerChoices,
+      },
+    ])
+    .then(async (answer) => {
+      if (answer.option >= 0 && answer.option < usernames.length) {
+        Messages.seeMessages(sessionInfo, usernames[answer.option])
+        await seeMessagesMenu(sessionInfo)
+      }
+    });
+}
+
 const consoleMenu = async (sessionInfo) => {
   await inquirer
     .prompt([
@@ -196,24 +222,7 @@ const consoleMenu = async (sessionInfo) => {
           break;
         }
         case "3)": {
-          const sender_id = "111";
-          const msgs = Messages.getMessages(sessionInfo.username, sender_id);
-
-          if (msgs === null) {
-            console.log(`No messages from ${sender_id} user`);
-            break;
-          }
-
-          const pass = await Authentication.askUserPassword(
-            "Type your password to decrypt your messages"
-          );
-          const salt = Cryptography.getUserSalt(sessionInfo.username);
-          const k = Cryptography.generatePBKDF(pass, salt);
-          msgs.forEach((msg, i) => {
-            const decMsg = Cryptography.localDecrypt(msg.msg, k);
-            const encSig = Cryptography.localDecrypt(msg.signature, k);
-            console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
-          });
+          await seeMessagesMenu(sessionInfo)
 
           break;
         }
@@ -221,7 +230,6 @@ const consoleMenu = async (sessionInfo) => {
             const username = sessionInfo.username
             const token = sessionInfo.user_private_info.sessionToken
             await chatMenu(username, token)
-            await consoleMenu(sessionInfo)
 
             break
         }
@@ -243,6 +251,8 @@ const consoleMenu = async (sessionInfo) => {
         }
       }
     });
+
+    await consoleMenu(sessionInfo)
 };
 
 const mainLoop = async () => {

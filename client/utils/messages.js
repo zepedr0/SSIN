@@ -2,8 +2,9 @@ var fs = require("fs");
 const path = require("path");
 const Files = require("./files");
 const axios = require('axios')
-const { sign } = require('./cryptography')
 const https = require('https')
+
+const Cryptography = require('./cryptography')
 
 // Stores a message sent by a sender
 const storeMessage = (recipient_username, sender_username, msg, signature) => {
@@ -21,7 +22,7 @@ const storeMessage = (recipient_username, sender_username, msg, signature) => {
 
 // Returns all messages sent by a sender
 const getMessages = (recipient_username, sender_username) => {
-  const filepath = path.join(__dirname, "..", "data", recipient_username, `${sender_username}.json`);
+  const filepath = path.join(__dirname, "..", "data", recipient_username, 'messages', `${sender_username}.json`);
 
   if (!fs.existsSync(filepath)) return null;
 
@@ -35,7 +36,7 @@ const sendMessage = async (username, msg, receiverPort) => {
     const keysDir = path.join(__dirname, '..', 'data', username, 'keys')
     // TODO: guardar a priv key encriptada, criar o csr no node e pedir ao server o certificate
     const privKey = fs.readFileSync(path.join(keysDir, 'key.pem'))
-    const sig = sign(privKey, msg)
+    const sig = Cryptography.sign(privKey, msg)
     const httpsAgent = new https.Agent({
       key: privKey,
       cert: fs.readFileSync(path.join(keysDir, 'cert.pem')),
@@ -63,8 +64,23 @@ const sendMessage = async (username, msg, receiverPort) => {
   }
 }
 
+const seeMessages = (sessionInfo, sender_id) => {
+  const msgs = getMessages(sessionInfo.username, sender_id);
+  if (msgs === null || msgs.length === 0) {
+    console.log(`No messages from ${sender_id}`);
+    return
+  }
+
+  msgs.forEach((msg, i) => {
+    const decMsg = Cryptography.localDecrypt(msg.msg, sessionInfo.user_private_info.key);
+    const encSig = Cryptography.localDecrypt(msg.signature, sessionInfo.user_private_info.key);
+    console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
+  });
+}
+
 module.exports = {
   storeMessage,
   getMessages,
-  sendMessage
+  sendMessage,
+  seeMessages
 };
