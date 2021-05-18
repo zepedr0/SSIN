@@ -8,7 +8,7 @@ const https = require('https')
 // Stores a message sent by a sender
 const storeMessage = (recipient_username, sender_username, msg, signature) => {
   
-  const filepath = path.join(__dirname, "..", "data", recipient_username, `${sender_username}.json`);
+  const filepath = path.join(__dirname, "..", "data", recipient_username, 'messages', `${sender_username}.json`);
   let msgs = [];
 
   // Check if file exists and load msgs;
