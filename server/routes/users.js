@@ -12,9 +12,9 @@ router.get(
   userController.getAllUsers
 );
 router.post("/register", userController.registerUser);
-router.get('/communication-info', validateToken, userController.getUsersCommunicationInfo)
-router.post('/communication-info', validateToken, userController.postPort)
-router.post('/certificate-requests', validateToken, userController.signCertificateRequest)
+router.get('/communication-info', validateToken, minClearanceLevel.securityLevel1, userController.getUsersCommunicationInfo)
+router.post('/communication-info', validateToken, minClearanceLevel.securityLevel1, userController.postPort)
+router.post('/certificate-requests', validateToken, minClearanceLevel.securityLevel1, userController.signCertificateRequest)
 router.post("/logout", validateToken, userController.logoutClient);
 
 module.exports = router;
