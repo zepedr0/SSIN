@@ -39,7 +39,7 @@ const rootCalc = async (token) => {
         "1) square root (clearance level 1)",
         "2) cubic root (clearance level 2)",
         "3) parameterized n root (clearance level 3)",
-        "4) Quit",
+        "4) Back",
       ],
     },
   ];
@@ -64,7 +64,7 @@ const rootCalc = async (token) => {
         break;
       }
       default: {
-        process.exit();
+        break
       }
     }
   });

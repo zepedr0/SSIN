@@ -206,8 +206,8 @@ const consoleMenu = async (sessionInfo) => {
           "1) Calculate a root",
           "2) See messages",
           "3) Send Message",
-          "8) Quit",
-          "9) End this client's session on your account",
+          "4) Quit",
+          "5) End this client's session on your account",
         ],
       },
     ])
@@ -230,7 +230,7 @@ const consoleMenu = async (sessionInfo) => {
 
           break;
         }
-        case "9)": {
+        case "5)": {
           const token = sessionInfo.user_private_info.sessionToken;
 
           const res = await Session.requestEnd(token);

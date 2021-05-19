@@ -52,10 +52,7 @@ const createMessageServer = async (sessionInfo) => {
 
     app.post('/', processMessage)
 
-    const server = https.createServer(options, app).listen(port, () => {
-        // TODO: tirar esta mensagem
-        console.log(`Listening for messages at https://localhost:${server.address().port}`)
-    })
+    const server = https.createServer(options, app).listen(port)
 
     return server
 }

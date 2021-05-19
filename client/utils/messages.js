@@ -51,9 +51,7 @@ const sendMessage = async (sessionInfo, msg, receiverPort) => {
         httpsAgent
       })
       .then((response) => {
-        // TODO: alterar isto
-        console.log("enviou")
-        // TODO: caso seja para guardar as mensagens enviadas temos que ver se este post retorna 201
+        return response
       })
       .catch((error) => {
         console.log(error)
