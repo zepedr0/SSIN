@@ -12,7 +12,7 @@ const chat = async (sessionInfo, receiverPort) => {
     const exitCode = ':q'
 
     const recursiveReadLine = async () => {
-        const message = await question('Write: ')
+        const message = await question('Write (type \':q\' and press ENTER to go back): ')
         if (message === exitCode) {
             return
         }
