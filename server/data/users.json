@@ -1,48 +1,44 @@
 [
   {
     "identity": {
-      "full_name": "Username Real"
+      "full_name": "João Carlos Carreira Martins"
     },
     "credentials": {
       "one_time_id": "45a78b4f3456",
-      "username": "username"
+      "username": "up201605373"
     },
     "clearance_level": 3,
-    "has_client_session": false,
-    "last_seen": 1621374467390,
-    "port": 33233
+    "has_client_session": false
   },
   {
     "identity": {
-      "full_name": "Usefname Silva"
+      "full_name": "José Pedro Maia Martins"
     },
     "credentials": {
       "one_time_id": "45a78c4f3456",
-      "username": "usefname"
+      "username": "up201605497"
     },
     "clearance_level": 1,
-    "has_client_session": false,
-    "last_seen": 1621373116631,
-    "port": 40547
+    "has_client_session": false
   },
   {
     "identity": {
-      "full_name": "Luigi"
+      "full_name": "José Pedro Moreira de Almeida Baptista"
     },
     "credentials": {
       "one_time_id": "23axg1j5a756",
-      "username": "luigi"
+      "username": "up201705255"
     },
     "clearance_level": 2,
     "has_client_session": false
   },
   {
     "identity": {
-      "full_name": "Mario"
+      "full_name": "Tiago Augusto Pacheco Ludovico Pinto de Barros"
     },
     "credentials": {
       "one_time_id": "ng71ndsAn13b",
-      "username": "mario"
+      "username": "up201502847"
     },
     "clearance_level": 2,
     "has_client_session": false
