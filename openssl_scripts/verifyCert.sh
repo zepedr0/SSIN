@@ -1,0 +1,1 @@
+openssl verify -CAfile ca-crt.pem cert.pem

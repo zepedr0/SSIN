@@ -1,0 +1,1 @@
+openssl dgst -sha256 -verify <(openssl x509 -in cert.pem -pubkey) -signature <(openssl base64 -d -in sig_base64) msg
