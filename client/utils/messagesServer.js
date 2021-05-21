@@ -3,7 +3,7 @@ const https = require('https')
 const fs = require('fs')
 const path = require('path')
 const app = express()
-const crypto = require('crypto')
+const { pki } = require('node-forge')
 
 const { checkSign } = require('./cryptography')
 const Messages = require('./messages')
@@ -13,19 +13,20 @@ let sessionInfo;
 
 const processMessage = async (req, res) => {
     const { msg, sig } = req.body
-    const peerCertificate = req.socket.getPeerCertificate()
-
-    if (!checkSign(crypto.createPublicKey({key: peerCertificate.pubkey, format: 'der', type: 'spki'}), msg, sig)) {
+    const peerCertificate = pki.certificateFromPem(req.socket.getPeerX509Certificate().toString())
+    if (!checkSign(pki.publicKeyToPem(peerCertificate.publicKey), msg, sig)) {
         res.status(403).send({ message: 'Digital signature is not valid' })
     }
 
     const encMsg = Cryptography.localEncrypt(msg, this.sessionInfo.user_private_info.key);
     const encSig = Cryptography.localEncrypt(sig, this.sessionInfo.user_private_info.key);
+    const encCert = Cryptography.localEncrypt(pki.certificateToPem(peerCertificate), this.sessionInfo.user_private_info.key);
     Messages.storeMessage(
       this.sessionInfo.username,
-      peerCertificate.subject.CN,
+      peerCertificate.subject.getField('CN') !== null ? peerCertificate.subject.getField('CN').value : undefined,
       encMsg,
-      encSig
+      encSig,
+      encCert
     );
 
     res.status(201).send()

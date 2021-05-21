@@ -3,11 +3,12 @@ const path = require("path");
 const Files = require("./files");
 const axios = require('axios')
 const https = require('https')
+const crypto = require('crypto')
 
 const Cryptography = require('./cryptography')
 
 // Stores a message sent by a sender
-const storeMessage = (recipient_username, sender_username, msg, signature) => {
+const storeMessage = (recipient_username, sender_username, msg, signature, senderCert) => {
   
   const filepath = path.join(__dirname, "..", "data", recipient_username, 'messages', `${sender_username}.json`);
   let msgs = [];
@@ -15,7 +16,7 @@ const storeMessage = (recipient_username, sender_username, msg, signature) => {
   // Check if file exists and load msgs;
   if (fs.existsSync(filepath)) msgs = require(filepath);
 
-  msgs.push({ msg, signature });
+  msgs.push({ msg, signature, senderCert });
 
   Files.createFile([recipient_username, 'messages'], `${sender_username}.json`, JSON.stringify(msgs));
 };
@@ -70,8 +71,11 @@ const seeMessages = (sessionInfo, sender_id) => {
 
   msgs.forEach((msg, i) => {
     const decMsg = Cryptography.localDecrypt(msg.msg, sessionInfo.user_private_info.key);
-    const encSig = Cryptography.localDecrypt(msg.signature, sessionInfo.user_private_info.key);
-    console.log(`Msg #${i}:\n\tmsg: ${decMsg}\n\tsig: ${encSig}`);
+    const decSig = Cryptography.localDecrypt(msg.signature, sessionInfo.user_private_info.key);
+    const decSenderCert = Cryptography.localDecrypt(msg.senderCert, sessionInfo.user_private_info.key);
+    const senderCert = new crypto.X509Certificate(decSenderCert)
+    const isSigValid = Cryptography.checkSign(senderCert.publicKey, decMsg, decSig)
+    console.log(`Msg #${i}:\n\tIs digital signature valid? ${isSigValid}\n\tmsg: ${decMsg}\n\tsig: ${decSig}\n\tsenderCert: ${decSenderCert}`);
   });
 }
 
