@@ -29,18 +29,19 @@ const decrypt = (passphrase, toDecrypt, username) => {
 // Generate signature
 const sign = (privateKey, msg) => {
   const signer = crypto.createSign("RSA-SHA256");
-  signer.write(Buffer.from(msg, 'hex'));
+  signer.write(msg);
   signer.end();
 
-  const signature = signer.sign(privateKey, "hex");
-  return signature;
+  const signature = signer.sign(privateKey);
+  return signature.toString('base64');
 };
 
 // Verify signature
 const checkSign = (publicKey, msg, signature) => {
   const verifier = crypto.createVerify("RSA-SHA256");
-  verifier.update(Buffer.from(msg, 'hex'));
-  const ver = verifier.verify(publicKey, signature, "hex");
+  verifier.write(msg);
+  verifier.end()
+  const ver = verifier.verify(publicKey, signature, 'base64');
   return ver;
 };
 
