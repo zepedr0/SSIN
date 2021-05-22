@@ -238,7 +238,7 @@ openssl verify -CAfile ca-crt.pem server-crt.pem
 ### Files folders
 
 After following this guide you should have the following files and should move them to the following folders:
-1. ca-crt.pem (move to folder server/data/CA)
+1. ca-crt.pem (move to folder server/data/CA and also folder client/data/CA)
 2. ca-key.pem (move to folder server/data/CA)
 3. server-crt.pem (move to folder server/data/keys)
 4. server-key.pem (move to folder server/data/keys)
