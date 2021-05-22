@@ -1,8 +1,6 @@
 const axios = require("axios");
 const inquirer = require("inquirer");
 
-const api = "http://localhost:3000/api/";
-
 const askUserPassword = async (message) => {
   const password_question = [
     {
@@ -35,7 +33,7 @@ const askUserPassword = async (message) => {
 const requestRegister = (username, one_time_id) => {
   // Register
   return axios
-    .post(`${api}users/register`, { username, one_time_id })
+    .post('/users/register', { username, one_time_id })
     .then((answer) => {
       return answer.data.token;
     })

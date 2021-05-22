@@ -1,6 +1,3 @@
-const fs = require("fs");
-const jwt = require("jsonwebtoken");
-
 const squareRoot = (req, res) => {
   const {value} = req.params;
   const squareRoot = Math.sqrt(value);

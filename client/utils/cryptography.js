@@ -3,8 +3,8 @@ const path = require("path");
 const fs = require("fs");
 
 // Encrypt message
-const encrypt = (toEncrypt, one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const encrypt = (toEncrypt, username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   const publicKey = fs.readFileSync(`${dir}/public.pem`, "utf8");
   const buffer = Buffer.from(toEncrypt, "utf8");
   const encrypted = crypto.publicEncrypt(publicKey.toString(), buffer);
@@ -12,8 +12,8 @@ const encrypt = (toEncrypt, one_time_id) => {
 };
 
 // Decrypt message
-const decrypt = (passphrase, toDecrypt, one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const decrypt = (passphrase, toDecrypt, username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   const privateKey = fs.readFileSync(`${dir}/private.pem`, "utf8");
   const buffer = Buffer.from(toDecrypt, "base64");
   const decrypted = crypto.privateDecrypt(
@@ -29,18 +29,19 @@ const decrypt = (passphrase, toDecrypt, one_time_id) => {
 // Generate signature
 const sign = (privateKey, msg) => {
   const signer = crypto.createSign("RSA-SHA256");
-  signer.write(Buffer.from(msg, 'hex'));
+  signer.write(msg);
   signer.end();
 
-  const signature = signer.sign(privateKey, "hex");
-  return signature;
+  const signature = signer.sign(privateKey);
+  return signature.toString('base64');
 };
 
 // Verify signature
 const checkSign = (publicKey, msg, signature) => {
   const verifier = crypto.createVerify("RSA-SHA256");
-  verifier.update(Buffer.from(msg, 'hex'));
-  const ver = verifier.verify(publicKey, signature, "hex");
+  verifier.write(msg);
+  verifier.end()
+  const ver = verifier.verify(publicKey, signature, 'base64');
   return ver;
 };
 
@@ -98,10 +99,18 @@ const localDecrypt = (toDecrypt, key) => {
   return decrypted.toString();
 };
 
-const getUserSalt = (one_time_id) => {
-  const dir = path.join(__dirname, "..", "data", one_time_id);
+const getUserSalt = (username) => {
+  const dir = path.join(__dirname, "..", "data", username);
   const salt = fs.readFileSync(`${dir}/salt`, "utf8");
   return salt;
+}
+
+const privKeyEncPemtoPem = (privKeyEncPem, passphrase) => {
+  return crypto.createPrivateKey({
+    key: privKeyEncPem,
+    format: 'pem',
+    passphrase: Buffer.from(passphrase)
+  }).export({ format: 'pem', type: 'pkcs8' })
 }
 
 module.exports = {
@@ -114,4 +123,5 @@ module.exports = {
   localEncrypt,
   localDecrypt,
   getUserSalt,
+  privKeyEncPemtoPem
 };

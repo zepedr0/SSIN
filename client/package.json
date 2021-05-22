@@ -12,8 +12,10 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
+    "dotenv": "^9.0.2",
     "express": "^4.17.1",
     "inquirer": "^8.0.0",
+    "node-forge": "^0.10.0",
     "nodemon": "^2.0.7"
   }
 }

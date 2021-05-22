@@ -1,8 +1,6 @@
 const axios = require("axios");
 const inquirer = require("inquirer");
 
-const api = "http://localhost:3000/api/";
-
 const askUserValue = async () => {
   const value_question = [
     {
@@ -41,41 +39,41 @@ const rootCalc = async (token) => {
         "1) square root (clearance level 1)",
         "2) cubic root (clearance level 2)",
         "3) parameterized n root (clearance level 3)",
-        "4) Quit",
+        "4) Back",
       ],
     },
   ];
 
-  inquirer.prompt(service_questions).then(async (answers) => {
+  await inquirer.prompt(service_questions).then(async (answers) => {
     const answerNumber = answers.option.split(" ")[0];
 
     switch (answerNumber) {
       case "1)": {
         const value = await askUserValue();
-        squareCubicRoot(1, value, token);
+        await squareCubicRoot(1, value, token);
         break;
       }
       case "2)": {
         const value = await askUserValue();
-        squareCubicRoot(2, value, token);
+        await squareCubicRoot(2, value, token);
         break;
       }
       case "3)": {
         const value = await askUserValue();
-        paramRoot(value, token);
+        await paramRoot(value, token);
         break;
       }
       default: {
-        process.exit();
+        break
       }
     }
   });
 };
 
 // Calculate Square or Cubic Root
-function squareCubicRoot(option, value, token) {
-  axios
-    .get(`${api}services/${option}/${value}`, {
+async function squareCubicRoot(option, value, token) {
+  await axios
+    .get(`/services/${option}/${value}`, {
       headers: {
         token: `${token}`,
       },
@@ -89,7 +87,7 @@ function squareCubicRoot(option, value, token) {
 }
 
 // Calculate Parameterized N Root
-function paramRoot(value, token) {
+async function paramRoot(value, token) {
   const root_question = [
     {
       type: "number",
@@ -103,9 +101,9 @@ function paramRoot(value, token) {
       },
     },
   ];
-  inquirer.prompt(root_question).then((answer) => {
-    axios
-      .get(`${api}services/3/${value}/${answer.root}`, {
+  await inquirer.prompt(root_question).then(async (answer) => {
+    await axios
+      .get(`/services/3/${value}/${answer.root}`, {
         headers: {
           token: `${token}`,
         },

@@ -1,5 +1,8 @@
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
+const { pki } = require('node-forge')
+const crypto = require('crypto')
+const path = require('path')
 
 const readJSONFile = (filePath) => {
   const data = JSON.parse(fs.readFileSync(filePath));
@@ -58,6 +61,78 @@ const registerUser = (req, res) => {
   return res.status(200).json({ token: auth_token });
 };
 
+const getUsersCommunicationInfo = (req, res) => {
+  const users = readJSONFile('./data/users.json')
+
+  const onlineUsers = users.map(user => {
+    return { 
+      full_name: user.identity.full_name, 
+      last_seen: user.last_seen,
+      port: user.port
+    }
+  })
+
+  res.status(200).send(onlineUsers)
+} 
+
+const postPort = (req, res) => {
+  const { port } = req.body
+
+  const usersDataPath = './data/users.json'
+  const users = readJSONFile(usersDataPath)
+  users.forEach(user => {
+    if (user.credentials.username === res.locals.username) {
+      user.last_seen = Date.now()
+      user.port = port
+    }
+  })
+
+  fs.writeFileSync(usersDataPath, JSON.stringify(users, null, 2))
+
+  res.status(201).send()
+}
+
+const createCertificate = (csr, caCert, caKey) => {
+  const cert = pki.createCertificate()
+  cert.publicKey = csr.publicKey
+  cert.validity.notBefore = new Date()
+  cert.validity.notAfter = new Date()
+  cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1)
+  // TODO: se nao funcionar faltam aqui propriedades
+  cert.setSubject(csr.subject.attributes)
+  // TODO: ver se setissuer é preciso
+  cert.setIssuer(caCert.subject.attributes)
+  cert.sign(caKey)
+
+  return pki.certificateToPem(cert)
+}
+
+const signCertificateRequest = (req, res) => {
+  const { csr: csrPem } = req.body
+
+  const csr = pki.certificationRequestFromPem(csrPem)
+  // if user requests a certificate with Common Name different than username
+  if (csr.subject.getField('CN').value !== res.locals.username) {
+    res.status(403).send()
+  }
+
+  // Read CA cert and key
+  const caCertPem = fs.readFileSync(path.join(__dirname, '..', 'data', 'CA', 'ca-crt.pem'))
+  const caCert = pki.certificateFromPem(caCertPem)
+  const caKeyEncPem = fs.readFileSync(path.join(__dirname, '..', 'data', 'CA', 'ca-key.pem'))
+  const caKeyPem = crypto.createPrivateKey({
+    key: caKeyEncPem,
+    format: 'pem',
+    // TODO: passphrase está hardcoded
+    passphrase: process.env.CA_KEY_PASSWORD
+  }).export({ format: 'pem', type: 'pkcs8' })
+  const caKey = pki.privateKeyFromPem(caKeyPem)
+  
+  const certPem = createCertificate(csr, caCert, caKey)
+
+  res.status(201).send({ cert: certPem })
+}
+
 const logoutClient = (req, res) => {
   const { username } = req.body.auth_user.credentials;
   setSessionState(username, false);
@@ -74,12 +149,15 @@ const setSessionState = (username, value) => {
     }
   });
 
-  writeJSONFile("./data/users.json", JSON.stringify(all_user_data));
+  writeJSONFile("./data/users.json", JSON.stringify(all_user_data, null, 2));
 };
 
 module.exports = {
   getAllUsers,
   registerUser,
   getUser,
+  getUsersCommunicationInfo,
+  postPort,
+  signCertificateRequest,
   logoutClient,
 };

@@ -25,6 +25,7 @@ const validateToken = async (req, res, next) => {
     // Makes the user available to following middlewares / methods
     req.body.auth_user = user_match;
 
+    res.locals.username = payload.username
     next();
   } catch (err) {
     res.status(500).json({ error: err.message });
