@@ -244,4 +244,4 @@ After following this guide you should have the following files and should move t
 4. server-key.pem (move to folder server/data/keys)
 5. server-csr.pem
 
-The server certificate signing request, 'server-csr.pem', is no longer needed so you can delete it.
+Files 5 and 6 can be deleted.
